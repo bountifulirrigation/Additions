@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Additions</title>
-  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
-  <script src="https://js.arcgis.com/4.29/"></script>
+  https://js.arcgis.com/4.29/esri/themes/light/main.css
+  https://js.arcgis.com/4.29/</script>
   <style>
     html, body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; }
     #appContainer { max-width:700px; margin:50px auto; background:#fff; padding:30px 40px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.08); }
@@ -130,6 +130,9 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     parcelFields.style.display="none";
     submitConfirmRow.style.display="none";
 
+    // NEW: focus cursor in Parcel Number on load (for after reload)
+    parcelInput.focus();
+
     function expandRangeString(rangeStr){
       let numbers=[];
       rangeStr.split(',').forEach(part=>{
@@ -182,7 +185,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
         group_.value=100;
         groupOwner.value="";
 
-        // === CHANGED: add a space between concatenated parts when both exist
+        // keep a single space between parts when both exist
         const houseNoPart1 = parcelB.ParcelSitusNumber || "";
         const houseNoPart2 = parcelB.ParcelSitusPreDirections || "";
         HOUSE_NO.value = houseNoPart1 && houseNoPart2 ? `${houseNoPart1} ${houseNoPart2}` : (houseNoPart1 || houseNoPart2);
@@ -190,7 +193,6 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
         const streetPart1 = parcelB.ParcelSitusStreetName || "";
         const streetPart2 = parcelB.ParcelSitusStreetType || "";
         STREET_NAM.value = streetPart1 && streetPart2 ? `${streetPart1} ${streetPart2}` : (streetPart1 || streetPart2);
-        // === END CHANGE
 
         groupOwnerRow.style.display="none";
         parcelFields.style.display="block";
@@ -263,8 +265,8 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
         OTHER_DESC: otherDesc.value,
         SPECIAL_NO: specialNo.value,
         HOUSE_NO: HOUSE_NO.value,
-        STREET_NAM: STREET_NAM.value,     // CHANGED: use STREET_NAM
-        Water_Charge: 6,                  // CHANGED: always set to 6
+        STREET_NAM: STREET_NAM.value,
+        Water_Charge: 6,
         Processed: Processed.value
       };
       try{
@@ -280,6 +282,12 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
         });
         status.innerHTML="Parcel successfully submitted!";
         submitConfirmRow.style.display="none";
+
+        // NEW: reload after short delay; focus will be applied on load
+        setTimeout(()=>{
+          window.location.reload();
+        }, 700);
+
       }catch(err){ console.error(err); status.innerHTML="Error submitting parcel."; }
     });
 
