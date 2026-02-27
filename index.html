@@ -48,6 +48,7 @@
     <div class="form-row"><label for="assessable">Assessable:</label><input id="assessable" /></div>
     <div class="form-row"><label for="acreFtWater">Acre Ft of Water:</label><input id="acreFtWater" readonly /></div>
     <div class="form-row"><label for="parcelStatus">Parcel Status:</label><input id="parcelStatus" /></div>
+    <div class="form-row"><label for="Status">Status:</label><input id="Status" /></div>
     <div class="form-row"><label for="activity">Activity:</label><input id="activity" readonly /></div>
     <div class="form-row"><label for="discountMultiplier">Discount Multiplier:</label><input id="discountMultiplier" /></div>
     <div class="form-row"><label for="services">Services:</label><input id="services" /></div>
@@ -60,6 +61,7 @@
     <!-- hidden fields -->
     <input type="hidden" id="HOUSE_NO" />
     <input type="hidden" id="STREET_NAME" />
+    <input type="hidden" id="Processed" value="NO" />
 
     <div id="submitConfirmRow">
       <button class="yes">Yes</button>
@@ -103,6 +105,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     const assessable = document.getElementById("assessable");
     const acreFtWater = document.getElementById("acreFtWater");
     const parcelStatus = document.getElementById("parcelStatus");
+    const Status = document.getElementById("Status");
     const activity = document.getElementById("activity");
     const discountMultiplier = document.getElementById("discountMultiplier");
     const services = document.getElementById("services");
@@ -117,6 +120,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     const specialNo = document.getElementById("specialNo");
     const HOUSE_NO = document.getElementById("HOUSE_NO");
     const STREET_NAME = document.getElementById("STREET_NAME");
+    const Processed = document.getElementById("Processed");
     const submitBtn = document.getElementById("submitBtn");
     const submitConfirmRow = document.getElementById("submitConfirmRow");
     const yesBtn = submitConfirmRow.querySelector(".yes");
@@ -171,6 +175,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
         assessable.value = parcelB.ParcelAcreage||"";
         acreFtWater.value = parcelB.ParcelAcreage?(parcelB.ParcelAcreage*2.9).toFixed(2):"";
         parcelStatus.value="Active";
+        Status.value="";
         activity.value="NEW"+new Date().getFullYear().toString().slice(-2);
         discountMultiplier.value=1;
         services.value=1;
@@ -230,6 +235,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
       const attrs={
         TAX_SER_NO: parcelInput.value,
         Parcel_Status: parcelStatus.value,
+        STATUS: Status.value,
         ACTIVITY: activity.value,
         Owner_Name: ownerName.value,
         Owner_Address: ownerAddress.value,
@@ -248,7 +254,8 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
         OTHER_DESC: otherDesc.value,
         SPECIAL_NO: specialNo.value,
         HOUSE_NO: HOUSE_NO.value,
-        STREET_NAME: STREET_NAME.value
+        STREET_NAME: STREET_NAME.value,
+        Processed: Processed.value
       };
       try{
         const cred=await esriId.checkSignInStatus(oauthInfo.portalUrl+"/sharing");
