@@ -4,10 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Additions</title>
-
   <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
   <script src="https://js.arcgis.com/4.29/"></script>
-
   <style>
     html, body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; }
     #appContainer { max-width:700px; margin:50px auto; background:#fff; padding:30px 40px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.08); }
@@ -61,6 +59,7 @@
     <!-- hidden fields -->
     <input type="hidden" id="HOUSE_NO" />
     <input type="hidden" id="STREET_NAM" />
+    <input type="hidden" id="Water_Charge" value="6" />
     <input type="hidden" id="Processed" value="NO" />
 
     <div id="submitConfirmRow">
@@ -120,6 +119,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     const specialNo = document.getElementById("specialNo");
     const HOUSE_NO = document.getElementById("HOUSE_NO");
     const STREET_NAM = document.getElementById("STREET_NAM");
+    const Water_Charge = document.getElementById("Water_Charge");
     const Processed = document.getElementById("Processed");
     const submitBtn = document.getElementById("submitBtn");
     const submitConfirmRow = document.getElementById("submitConfirmRow");
@@ -181,8 +181,17 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
         services.value=1;
         group_.value=100;
         groupOwner.value="";
-        HOUSE_NO.value = (parcelB.ParcelSitusNumber||"") + (parcelB.ParcelSitusPreDirections||"");
-        STREET_NAM.value = (parcelB.ParcelSitusStreetName||"") + (parcelB.ParcelSitusStreetType||"");
+
+        // === CHANGED: add a space between concatenated parts when both exist
+        const houseNoPart1 = parcelB.ParcelSitusNumber || "";
+        const houseNoPart2 = parcelB.ParcelSitusPreDirections || "";
+        HOUSE_NO.value = houseNoPart1 && houseNoPart2 ? `${houseNoPart1} ${houseNoPart2}` : (houseNoPart1 || houseNoPart2);
+
+        const streetPart1 = parcelB.ParcelSitusStreetName || "";
+        const streetPart2 = parcelB.ParcelSitusStreetType || "";
+        STREET_NAM.value = streetPart1 && streetPart2 ? `${streetPart1} ${streetPart2}` : (streetPart1 || streetPart2);
+        // === END CHANGE
+
         groupOwnerRow.style.display="none";
         parcelFields.style.display="block";
         priorsContainer.style.display="flex";
@@ -254,7 +263,8 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
         OTHER_DESC: otherDesc.value,
         SPECIAL_NO: specialNo.value,
         HOUSE_NO: HOUSE_NO.value,
-        STREET_NAME: STREET_NAME.value,
+        STREET_NAM: STREET_NAM.value,     // CHANGED: use STREET_NAM
+        Water_Charge: 6,                  // CHANGED: always set to 6
         Processed: Processed.value
       };
       try{
