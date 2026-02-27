@@ -130,9 +130,6 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     parcelFields.style.display="none";
     submitConfirmRow.style.display="none";
 
-    // NEW: focus cursor in Parcel Number on load (for after reload)
-    parcelInput.focus();
-
     function expandRangeString(rangeStr){
       let numbers=[];
       rangeStr.split(',').forEach(part=>{
@@ -280,13 +277,47 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
           authentication: cred,
           responseType:"json"
         });
+
         status.innerHTML="Parcel successfully submitted!";
         submitConfirmRow.style.display="none";
 
-        // NEW: reload after short delay; focus will be applied on load
-        setTimeout(()=>{
-          window.location.reload();
-        }, 700);
+        // ---- SOFT RESET (only change added) ----
+        // Clear inputs for next entry and return focus to Parcel Number
+        parcelInput.value = "";
+        ownerName.value = "";
+        ownerAddress.value = "";
+        ownerCity.value = "";
+        ownerState.value = "";
+        ownerZip.value = "";
+        Address.value = "";
+        acreage.value = "";
+        assessable.value = "";
+        acreFtWater.value = "";
+        parcelStatus.value = "";
+        Status.value = "";
+        activity.value = "";
+        discountMultiplier.value = "";
+        services.value = "";
+        group_.value = "";
+        groupOwner.value = "";
+        priors.value = "";
+        otherDesc.value = "";
+        specialNo.value = "";
+        HOUSE_NO.value = "";
+        STREET_NAM.value = "";
+        // keep Water_Charge at default 6, Processed stays as-is
+
+        // Hide detail section until next lookup
+        parcelFields.style.display = "none";
+        // Optional: hide prior-derived sections again
+        document.getElementById("otherDescDiv").style.display = "none";
+        document.getElementById("specialNoDiv").style.display = "none";
+        document.getElementById("priorsContainer").style.display = "none";
+        document.getElementById("groupOwnerRow").style.display = "none";
+
+        // Put cursor back for rapid data entry
+        parcelInput.focus();
+        // ----------------------------------------
 
       }catch(err){ console.error(err); status.innerHTML="Error submitting parcel."; }
     });
