@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Additions</title>
-  https://js.arcgis.com/4.29/esri/themes/light/main.css
-  https://js.arcgis.com/4.29/</script>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.29/"></script>
   <style>
     html, body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; }
     #appContainer { max-width:700px; margin:50px auto; background:#fff; padding:30px 40px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.08); }
@@ -182,7 +182,6 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
         group_.value=100;
         groupOwner.value="";
 
-        // keep a single space between parts when both exist
         const houseNoPart1 = parcelB.ParcelSitusNumber || "";
         const houseNoPart2 = parcelB.ParcelSitusPreDirections || "";
         HOUSE_NO.value = houseNoPart1 && houseNoPart2 ? `${houseNoPart1} ${houseNoPart2}` : (houseNoPart1 || houseNoPart2);
@@ -277,47 +276,42 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
           authentication: cred,
           responseType:"json"
         });
-
         status.innerHTML="Parcel successfully submitted!";
         submitConfirmRow.style.display="none";
 
-        // ---- SOFT RESET (only change added) ----
-        // Clear inputs for next entry and return focus to Parcel Number
-        parcelInput.value = "";
-        ownerName.value = "";
-        ownerAddress.value = "";
-        ownerCity.value = "";
-        ownerState.value = "";
-        ownerZip.value = "";
-        Address.value = "";
-        acreage.value = "";
-        assessable.value = "";
-        acreFtWater.value = "";
-        parcelStatus.value = "";
-        Status.value = "";
-        activity.value = "";
-        discountMultiplier.value = "";
-        services.value = "";
-        group_.value = "";
-        groupOwner.value = "";
-        priors.value = "";
-        otherDesc.value = "";
-        specialNo.value = "";
-        HOUSE_NO.value = "";
-        STREET_NAM.value = "";
-        // keep Water_Charge at default 6, Processed stays as-is
-
-        // Hide detail section until next lookup
-        parcelFields.style.display = "none";
-        // Optional: hide prior-derived sections again
-        document.getElementById("otherDescDiv").style.display = "none";
-        document.getElementById("specialNoDiv").style.display = "none";
-        document.getElementById("priorsContainer").style.display = "none";
-        document.getElementById("groupOwnerRow").style.display = "none";
-
-        // Put cursor back for rapid data entry
-        parcelInput.focus();
-        // ----------------------------------------
+        // === RESET ALL FIELDS AND FOCUS INPUT ===
+        setTimeout(() => {
+          parcelInput.value = "";
+          ownerName.value = "";
+          ownerAddress.value = "";
+          ownerCity.value = "";
+          ownerState.value = "";
+          ownerZip.value = "";
+          Address.value = "";
+          acreage.value = "";
+          assessable.value = "";
+          acreFtWater.value = "";
+          parcelStatus.value = "";
+          Status.value = "";
+          activity.value = "";
+          discountMultiplier.value = "";
+          services.value = "";
+          group_.value = 100;
+          groupOwner.value = "";
+          priors.value = "";
+          otherDesc.value = "";
+          specialNo.value = "";
+          HOUSE_NO.value = "";
+          STREET_NAM.value = "";
+          parcelFields.style.display = "none";
+          priorsContainer.style.display = "none";
+          otherDescDiv.style.display = "none";
+          specialNoDiv.style.display = "none";
+          submitConfirmRow.style.display = "none";
+          status.innerHTML = "";
+          parcelInput.focus();
+        }, 300);
+        // === END CHANGE ===
 
       }catch(err){ console.error(err); status.innerHTML="Error submitting parcel."; }
     });
