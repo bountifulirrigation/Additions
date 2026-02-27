@@ -111,12 +111,12 @@ require([
   const layerAUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/service_f6d0b40f569c4851b2227f1f41e55aba/FeatureServer/0";
   const layerBUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/Assessment_Parcels/FeatureServer/0";
 
-  const oauthInfo = new OAuthInfo({
+ const oauthInfo = new OAuthInfo({
     appId: "LYyDkVlqS7vIWtgK",
     portalUrl: "https://bwsd.maps.arcgis.com",
     popup: false,
-    redirectUri: window.location.origin + window.location.pathname
-  });
+    redirectUri: "https://bountifulirrigation.github.io/Additions/"
+});
 
   esriId.registerOAuthInfos([oauthInfo]);
 
