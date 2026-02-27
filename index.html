@@ -38,7 +38,25 @@
   </div>
 
   <div id="parcelFields">
-    <!-- form fields unchanged -->
+    <div class="form-row"><label for="ownerName">Owner Name:</label><input id="ownerName" readonly /></div>
+    <div class="form-row"><label for="ownerAddress">Owner Address:</label><textarea id="ownerAddress" rows="3" readonly></textarea></div>
+    <div class="form-row"><label for="ownerCity">City:</label><input id="ownerCity" readonly /></div>
+    <div class="form-row"><label for="ownerState">State:</label><input id="ownerState" readonly /></div>
+    <div class="form-row"><label for="ownerZip">ZIP:</label><input id="ownerZip" readonly /></div>
+    <div class="form-row"><label for="Address">Address:</label><input id="Address" readonly /></div>
+    <div class="form-row"><label for="acreage">Acreage:</label><input id="acreage" readonly /></div>
+    <div class="form-row"><label for="assessable">Assessable:</label><input id="assessable" /></div>
+    <div class="form-row"><label for="acreFtWater">Acre Ft of Water:</label><input id="acreFtWater" readonly /></div>
+    <div class="form-row"><label for="parcelStatus">Parcel Status:</label><input id="parcelStatus" /></div>
+    <div class="form-row"><label for="Status">Status:</label><input id="Status" /></div>
+    <div class="form-row"><label for="activity">Activity:</label><input id="activity" readonly /></div>
+    <div class="form-row"><label for="discountMultiplier">Discount Multiplier:</label><input id="discountMultiplier" /></div>
+    <div class="form-row"><label for="services">Services:</label><input id="services" /></div>
+    <div class="form-row"><label for="group_">Group:</label><input id="group_" /></div>
+    <div class="form-row" id="groupOwnerRow"><label for="groupOwner">Group Owner:</label><input id="groupOwner" readonly /></div>
+    <div class="form-row" id="priorsContainer"><label for="priors">Priors:</label><input id="priors" placeholder="e.g., 12345,12347-12350" /></div>
+    <div class="form-row" id="otherDescDiv"><label>Other_Desc:</label><input id="otherDesc" readonly /></div>
+    <div class="form-row" id="specialNoDiv"><label>Special_No:</label><input id="specialNo" readonly /></div>
 
     <!-- hidden fields -->
     <input type="hidden" id="HOUSE_NO" />
@@ -74,32 +92,192 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     const layerAUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/service_f6d0b40f569c4851b2227f1f41e55aba/FeatureServer/0";
     const layerBUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/Assessment_Parcels/FeatureServer/0";
 
+    const parcelInput = document.getElementById("parcelInput");
+    const parcelFields = document.getElementById("parcelFields");
+
+    const ownerName = document.getElementById("ownerName");
+    const ownerAddress = document.getElementById("ownerAddress");
+    const ownerCity = document.getElementById("ownerCity");
+    const ownerState = document.getElementById("ownerState");
+    const ownerZip = document.getElementById("ownerZip");
+    const Address = document.getElementById("Address");
+    const acreage = document.getElementById("acreage");
+    const assessable = document.getElementById("assessable");
+    const acreFtWater = document.getElementById("acreFtWater");
+    const parcelStatus = document.getElementById("parcelStatus");
+    const Status = document.getElementById("Status");
+    const activity = document.getElementById("activity");
+    const discountMultiplier = document.getElementById("discountMultiplier");
+    const services = document.getElementById("services");
+    const group_ = document.getElementById("group_");
+    const groupOwnerRow = document.getElementById("groupOwnerRow");
+    const groupOwner = document.getElementById("groupOwner");
+    const priorsContainer = document.getElementById("priorsContainer");
+    const priors = document.getElementById("priors");
+    const otherDescDiv = document.getElementById("otherDescDiv");
+    const otherDesc = document.getElementById("otherDesc");
+    const specialNoDiv = document.getElementById("specialNoDiv");
+    const specialNo = document.getElementById("specialNo");
     const HOUSE_NO = document.getElementById("HOUSE_NO");
     const STREET_NAM = document.getElementById("STREET_NAM");
+    const Processed = document.getElementById("Processed");
+    const submitBtn = document.getElementById("submitBtn");
+    const submitConfirmRow = document.getElementById("submitConfirmRow");
+    const yesBtn = submitConfirmRow.querySelector(".yes");
+    const noBtn = submitConfirmRow.querySelector(".no");
+    const status = document.getElementById("status");
+
+    parcelFields.style.display="none";
+    submitConfirmRow.style.display="none";
+
+    function expandRangeString(rangeStr){
+      let numbers=[];
+      rangeStr.split(',').forEach(part=>{
+        part=part.trim();
+        if(part.includes('-')){
+          let [start,end]=part.split('-').map(Number);
+          for(let i=start;i<=end;i++) numbers.push(i);
+        } else if(part.length) numbers.push(Number(part));
+      });
+      return numbers;
+    }
 
     async function lookupParcel(){
-      const respB = await esriRequest(layerBUrl+"/query",{ method:"post", query:{ f:"json", where:`ParcelTaxID+0=${parseInt(parcelInput.value)}`, outFields:"*,ParcelSitusNumber,ParcelSitusPreDirections,ParcelSitusStreetName,ParcelSitusStreetType", returnGeometry:false }});
-      const parcelB = respB.data.features[0].attributes;
+      const parcel = parcelInput.value.trim();
+      status.innerHTML="";
+      parcelFields.style.display="none";
+      submitConfirmRow.style.display="none";
 
-      HOUSE_NO.value =
-        (parcelB.ParcelSitusNumber||"") + " " +
-        (parcelB.ParcelSitusPreDirections||"");
+      if(!parcel) return;
+      status.innerHTML="Searching...";
 
-      STREET_NAM.value =
-        (parcelB.ParcelSitusStreetName||"") + " " +
-        (parcelB.ParcelSitusStreetType||"");
+      try{
+        const respB = await esriRequest(layerBUrl+"/query", {
+          method:"post",
+          query:{ f:"json", where:`ParcelTaxID+0=${parseInt(parcel)}`, outFields:"*,ParcelFullSitusAddress,ParcelSitusNumber,ParcelSitusPreDirections,ParcelSitusStreetName,ParcelSitusStreetType", returnGeometry:false }
+        });
+        if(respB.data.features.length===0){ status.innerHTML="Parcel not found."; return; }
+        const parcelB = respB.data.features[0].attributes;
+
+        const respA = await esriRequest(layerAUrl+"/query", {
+          method:"post",
+          query:{ f:"json", where:`TAX_SER_NO='${parcel}'`, outFields:"PRIORS,OTHER_DESC,SPECIAL_NO", returnGeometry:false }
+        });
+        if(respA.data.features.length>0){ status.innerHTML="Parcel already exists."; return; }
+
+        ownerName.value = parcelB.ParcelOwnerName||"";
+        ownerAddress.value = [parcelB.ParcelOwnerMailAddressLine1, parcelB.ParcelOwnerMailAddressLine2, parcelB.ParcelOwnerMailAddressLine3].filter(Boolean).join("\n");
+        ownerCity.value = parcelB.ParcelOwnerMailCity||"";
+        ownerState.value = parcelB.ParcelOwnerMailState||"";
+        ownerZip.value = parcelB.ParcelOwnerMailZipcode||"";
+        Address.value = parcelB.ParcelFullSitusAddress||"";
+        acreage.value = parcelB.ParcelAcreage||"";
+        assessable.value = parcelB.ParcelAcreage||"";
+        acreFtWater.value = parcelB.ParcelAcreage?(parcelB.ParcelAcreage*2.9).toFixed(2):"";
+        parcelStatus.value="Active";
+        Status.value="";
+        activity.value="NEW"+new Date().getFullYear().toString().slice(-2);
+        discountMultiplier.value=1;
+        services.value=1;
+        group_.value=100;
+        groupOwner.value="";
+        HOUSE_NO.value = (parcelB.ParcelSitusNumber||"") + (parcelB.ParcelSitusPreDirections||"");
+        STREET_NAM.value = (parcelB.ParcelSitusStreetName||"") + (parcelB.ParcelSitusStreetType||"");
+        groupOwnerRow.style.display="none";
+        parcelFields.style.display="block";
+        priorsContainer.style.display="flex";
+        submitBtn.disabled=false;
+        status.innerHTML="Parcel found.";
+
+      }catch(err){ console.error(err); status.innerHTML="Error during lookup."; }
     }
+
+    parcelInput.addEventListener("blur", lookupParcel);
+    parcelInput.addEventListener("keydown", e=>{ if(e.key==="Enter") lookupParcel(); });
+
+    assessable.addEventListener("input", ()=>{ 
+      const val=parseFloat(assessable.value);
+      acreFtWater.value=isNaN(val)?"":(val*2.9).toFixed(2);
+    });
+
+    priors.addEventListener("blur", async function(){
+      const raw=priors.value.trim();
+      if(!raw) return;
+      const priorNums=expandRangeString(raw);
+      let otherDescList=[], specialNoList=[];
+      for(let prior of priorNums){
+        try{
+          const resp = await esriRequest(layerAUrl+"/query",{
+            method:"post",
+            query:{ f:"json", where:`TAX_SER_NO='${prior}'`, outFields:"OTHER_DESC,SPECIAL_NO", returnGeometry:false }
+          });
+          if(resp.data.features.length){
+            const attrs=resp.data.features[0].attributes;
+            if(attrs.OTHER_DESC) otherDescList.push(attrs.OTHER_DESC);
+            if(attrs.SPECIAL_NO) specialNoList.push(attrs.SPECIAL_NO);
+          }
+        }catch(err){ console.error(err); }
+      }
+      otherDesc.value = otherDescList.length? otherDescList.join(", "):"N/A";
+      specialNo.value = specialNoList.length? specialNoList.join(", "):"N/A";
+      otherDescDiv.style.display="flex";
+      specialNoDiv.style.display="flex";
+    });
+
+    group_.addEventListener("input", function(){
+      if(parseInt(group_.value)!==100){ groupOwnerRow.style.display="flex"; }
+      else{ groupOwnerRow.style.display="none"; groupOwner.value=""; }
+    });
+
+    submitBtn.addEventListener("click", ()=>{ submitConfirmRow.style.display="flex"; });
 
     yesBtn.addEventListener("click", async function(){
       const attrs={
-        STREET_NAM: STREET_NAM.value,
+        TAX_SER_NO: parcelInput.value,
+        Parcel_Status: parcelStatus.value,
+        STATUS: Status.value,
+        ACTIVITY: activity.value,
+        Owner_Name: ownerName.value,
+        Owner_Address: ownerAddress.value,
+        OWNER_CITY: ownerCity.value,
+        OWNER_STAT: ownerState.value,
+        OWNER_ZIP: ownerZip.value,
+        Address: Address.value,
+        Acreage: acreage.value,
+        ASSESSABLE: assessable.value,
+        Acre_ft_Water: acreFtWater.value,
+        Discount_Multiplier: discountMultiplier.value,
+        SERVICE_S_: services.value,
+        GROUP_: group_.value,
+        group_owner: groupOwner.value,
+        PRIORS: priors.value,
+        OTHER_DESC: otherDesc.value,
+        SPECIAL_NO: specialNo.value,
         HOUSE_NO: HOUSE_NO.value,
-        Water_Charge: 6
+        STREET_NAME: STREET_NAME.value,
+        Processed: Processed.value
       };
+      try{
+        const cred=await esriId.checkSignInStatus(oauthInfo.portalUrl+"/sharing");
+        await esriRequest(layerAUrl+"/addFeatures",{
+          method:"post",
+          query:{
+            f:"json",
+            features: JSON.stringify([{ attributes: attrs }])
+          },
+          authentication: cred,
+          responseType:"json"
+        });
+        status.innerHTML="Parcel successfully submitted!";
+        submitConfirmRow.style.display="none";
+      }catch(err){ console.error(err); status.innerHTML="Error submitting parcel."; }
     });
+
+    noBtn.addEventListener("click", ()=>{ submitConfirmRow.style.display="none"; });
 
   }
 });
 </script>
+
 </body>
 </html>
