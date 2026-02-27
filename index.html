@@ -38,25 +38,23 @@
   </div>
 
   <div id="parcelFields">
-
-    <div class="form-row"><label>Owner Name:</label><input id="ownerName" readonly /></div>
-    <div class="form-row"><label>Owner Address:</label><textarea id="ownerAddress" rows="3" readonly></textarea></div>
-    <div class="form-row"><label>City:</label><input id="ownerCity" readonly /></div>
-    <div class="form-row"><label>State:</label><input id="ownerState" readonly /></div>
-    <div class="form-row"><label>ZIP:</label><input id="ownerZip" readonly /></div>
-    <div class="form-row"><label>Address:</label><input id="Address" readonly /></div>
-    <div class="form-row"><label>Acreage:</label><input id="acreage" readonly /></div>
-    <div class="form-row"><label>Assessable:</label><input id="assessable" /></div>
-    <div class="form-row"><label>Acre Ft of Water:</label><input id="acreFtWater" readonly /></div>
-    <div class="form-row"><label>Parcel Status:</label><input id="parcelStatus" /></div>
-    <div class="form-row"><label>Status:</label><input id="Status" /></div>
-    <div class="form-row"><label>Activity:</label><input id="activity" readonly /></div>
-    <div class="form-row"><label>Discount Multiplier:</label><input id="discountMultiplier" /></div>
-    <div class="form-row"><label>Services:</label><input id="services" /></div>
-    <div class="form-row"><label>Group:</label><input id="group_" /></div>
-
-    <div class="form-row" id="groupOwnerRow"><label>Group Owner:</label><input id="groupOwner" readonly /></div>
-    <div class="form-row" id="priorsContainer"><label>Priors:</label><input id="priors" placeholder="e.g., 12345,12347-12350" /></div>
+    <div class="form-row"><label for="ownerName">Owner Name:</label><input id="ownerName" readonly /></div>
+    <div class="form-row"><label for="ownerAddress">Owner Address:</label><textarea id="ownerAddress" rows="3" readonly></textarea></div>
+    <div class="form-row"><label for="ownerCity">City:</label><input id="ownerCity" readonly /></div>
+    <div class="form-row"><label for="ownerState">State:</label><input id="ownerState" readonly /></div>
+    <div class="form-row"><label for="ownerZip">ZIP:</label><input id="ownerZip" readonly /></div>
+    <div class="form-row"><label for="Address">Address:</label><input id="Address" readonly /></div>
+    <div class="form-row"><label for="acreage">Acreage:</label><input id="acreage" readonly /></div>
+    <div class="form-row"><label for="assessable">Assessable:</label><input id="assessable" /></div>
+    <div class="form-row"><label for="acreFtWater">Acre Ft of Water:</label><input id="acreFtWater" readonly /></div>
+    <div class="form-row"><label for="parcelStatus">Parcel Status:</label><input id="parcelStatus" /></div>
+    <div class="form-row"><label for="Status">Status:</label><input id="Status" /></div>
+    <div class="form-row"><label for="activity">Activity:</label><input id="activity" readonly /></div>
+    <div class="form-row"><label for="discountMultiplier">Discount Multiplier:</label><input id="discountMultiplier" /></div>
+    <div class="form-row"><label for="services">Services:</label><input id="services" /></div>
+    <div class="form-row"><label for="group_">Group:</label><input id="group_" /></div>
+    <div class="form-row" id="groupOwnerRow"><label for="groupOwner">Group Owner:</label><input id="groupOwner" readonly /></div>
+    <div class="form-row" id="priorsContainer"><label for="priors">Priors:</label><input id="priors" placeholder="e.g., 12345,12347-12350" /></div>
     <div class="form-row" id="otherDescDiv"><label>Other_Desc:</label><input id="otherDesc" readonly /></div>
     <div class="form-row" id="specialNoDiv"><label>Special_No:</label><input id="specialNo" readonly /></div>
 
@@ -78,8 +76,7 @@
 </div>
 
 <script>
-require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request"], 
-function(OAuthInfo, esriId, esriRequest){
+require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request"], function(OAuthInfo, esriId, esriRequest){
 
   const oauthInfo = new OAuthInfo({
     appId: "LYyDkVlqS7vIWtgK",
@@ -87,93 +84,21 @@ function(OAuthInfo, esriId, esriRequest){
     popup: false,
     redirectUri: "https://bountifulirrigation.github.io/Additions/"
   });
-
   esriId.registerOAuthInfos([oauthInfo]);
-
   esriId.checkSignInStatus(oauthInfo.portalUrl+"/sharing")
     .then(startApp)
     .catch(()=> esriId.getCredential(oauthInfo.portalUrl+"/sharing").then(startApp));
 
   function startApp(){
-
     const layerAUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/service_f6d0b40f569c4851b2227f1f41e55aba/FeatureServer/0";
     const layerBUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/Assessment_Parcels/FeatureServer/0";
 
-    const parcelInput = document.getElementById("parcelInput");
-    const parcelFields = document.getElementById("parcelFields");
-
-    const ownerName = document.getElementById("ownerName");
-    const ownerAddress = document.getElementById("ownerAddress");
-    const ownerCity = document.getElementById("ownerCity");
-    const ownerState = document.getElementById("ownerState");
-    const ownerZip = document.getElementById("ownerZip");
-    const Address = document.getElementById("Address");
-    const acreage = document.getElementById("acreage");
-    const assessable = document.getElementById("assessable");
-    const acreFtWater = document.getElementById("acreFtWater");
-    const parcelStatus = document.getElementById("parcelStatus");
-    const Status = document.getElementById("Status");
-    const activity = document.getElementById("activity");
-    const discountMultiplier = document.getElementById("discountMultiplier");
-    const services = document.getElementById("services");
-    const group_ = document.getElementById("group_");
-    const groupOwner = document.getElementById("groupOwner");
-    const priors = document.getElementById("priors");
-    const otherDesc = document.getElementById("otherDesc");
-    const specialNo = document.getElementById("specialNo");
     const HOUSE_NO = document.getElementById("HOUSE_NO");
     const STREET_NAM = document.getElementById("STREET_NAM");
-    const Processed = document.getElementById("Processed");
-    const Water_Charge = document.getElementById("Water_Charge");
-    const submitBtn = document.getElementById("submitBtn");
-    const submitConfirmRow = document.getElementById("submitConfirmRow");
-    const yesBtn = submitConfirmRow.querySelector(".yes");
-    const noBtn = submitConfirmRow.querySelector(".no");
-    const status = document.getElementById("status");
-
-    parcelFields.style.display="none";
 
     async function lookupParcel(){
-      const parcel = parcelInput.value.trim();
-      if(!parcel) return;
-
-      const respB = await esriRequest(layerBUrl+"/query",{
-        method:"post",
-        query:{
-          f:"json",
-          where:`ParcelTaxID+0=${parseInt(parcel)}`,
-          outFields:"*",
-          returnGeometry:false
-        }
-      });
-
-      if(respB.data.features.length===0){
-        status.innerHTML="Parcel not found.";
-        return;
-      }
-
+      const respB = await esriRequest(layerBUrl+"/query",{ method:"post", query:{ f:"json", where:`ParcelTaxID+0=${parseInt(parcelInput.value)}`, outFields:"*", returnGeometry:false }});
       const parcelB = respB.data.features[0].attributes;
-
-      ownerName.value = parcelB.ParcelOwnerName||"";
-      ownerAddress.value = [
-        parcelB.ParcelOwnerMailAddressLine1,
-        parcelB.ParcelOwnerMailAddressLine2,
-        parcelB.ParcelOwnerMailAddressLine3
-      ].filter(Boolean).join("\n");
-
-      ownerCity.value = parcelB.ParcelOwnerMailCity||"";
-      ownerState.value = parcelB.ParcelOwnerMailState||"";
-      ownerZip.value = parcelB.ParcelOwnerMailZipcode||"";
-      Address.value = parcelB.ParcelFullSitusAddress||"";
-      acreage.value = parcelB.ParcelAcreage||"";
-      assessable.value = parcelB.ParcelAcreage||"";
-      acreFtWater.value = parcelB.ParcelAcreage ? (parcelB.ParcelAcreage*2.9).toFixed(2) : "";
-
-      parcelStatus.value="Active";
-      activity.value="NEW"+new Date().getFullYear().toString().slice(-2);
-      discountMultiplier.value=1;
-      services.value=1;
-      group_.value=100;
 
       HOUSE_NO.value =
         (parcelB.ParcelSitusNumber || "") + " " +
@@ -182,61 +107,18 @@ function(OAuthInfo, esriId, esriRequest){
       STREET_NAM.value =
         (parcelB.ParcelSitusStreetName || "") + " " +
         (parcelB.ParcelSitusStreetType || "");
-
-      parcelFields.style.display="block";
-      status.innerHTML="Parcel found.";
     }
 
-    parcelInput.addEventListener("blur", lookupParcel);
-    parcelInput.addEventListener("keydown", e=>{ if(e.key==="Enter") lookupParcel(); });
-
     yesBtn.addEventListener("click", async function(){
-
       const attrs={
-        TAX_SER_NO: parcelInput.value,
-        Parcel_Status: parcelStatus.value,
-        STATUS: Status.value,
-        ACTIVITY: activity.value,
-        Owner_Name: ownerName.value,
-        Owner_Address: ownerAddress.value,
-        OWNER_CITY: ownerCity.value,
-        OWNER_STAT: ownerState.value,
-        OWNER_ZIP: ownerZip.value,
-        Address: Address.value,
-        Acreage: acreage.value,
-        ASSESSABLE: assessable.value,
-        Acre_ft_Water: acreFtWater.value,
-        Discount_Multiplier: discountMultiplier.value,
-        SERVICE_S_: services.value,
-        GROUP_: group_.value,
-        group_owner: groupOwner.value,
-        PRIORS: priors.value,
-        OTHER_DESC: otherDesc.value,
-        SPECIAL_NO: specialNo.value,
-        HOUSE_NO: HOUSE_NO.value,
         STREET_NAM: STREET_NAM.value,
-        Water_Charge: 6,
-        Processed: Processed.value
+        HOUSE_NO: HOUSE_NO.value,
+        Water_Charge: 6
       };
-
-      await esriRequest(layerAUrl+"/addFeatures",{
-        method:"post",
-        query:{
-          f:"json",
-          features: JSON.stringify([{ attributes: attrs }])
-        }
-      });
-
-      status.innerHTML="Parcel successfully submitted!";
-      submitConfirmRow.style.display="none";
     });
-
-    submitBtn.addEventListener("click", ()=>{ submitConfirmRow.style.display="flex"; });
-    noBtn.addEventListener("click", ()=>{ submitConfirmRow.style.display="none"; });
 
   }
 });
 </script>
-
 </body>
 </html>
