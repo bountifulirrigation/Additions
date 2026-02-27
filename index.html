@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Add / Delete Parcels</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.29/"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    #loginScreen {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #appContainer {
+      display: none;
+      max-width: 600px;
+      margin: 50px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    input {
+      width: 90%;
+      padding: 12px;
+      font-size: 16px;
+      margin-top: 10px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    button {
+      width: 50%;
+      padding: 12px;
+      margin: 15px auto 0 auto;
+      font-size: 16px;
+      cursor: pointer;
+      display: block;
+    }
+
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    #parcelInfo {
+      margin-top: 15px;
+      background: #f0f0f0;
+      padding: 10px;
+      border-radius: 4px;
+      display: none;
+      text-align: left;
+    }
+
+    #priorsInputContainer, #priorsInput {
+      display: none;
+    }
+
+    #otherDesc, #specialNo {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="loginScreen">
+  <h2>Loading secure app...</h2>
+</div>
+
+<div id="appContainer">
+  <h2>Add Parcel Record</h2>
+
+  <input id="parcelInput" placeholder="Enter Parcel Number" />
+  
+  <div id="parcelInfo"></div>
+
+  <div id="priorsInputContainer">
+    <input id="priorsInput" placeholder="Enter Priors (e.g., 12345,12347-12350)" />
+    <div id="otherDesc">Other_Desc: </div>
+    <div id="specialNo">Special_No: </div>
+  </div>
+
+  <button id="submitBtn" disabled>Submit Parcel</button>
+  <div id="status"></div>
+</div>
+
+<script>
+require([
+  "esri/identity/OAuthInfo",
+  "esri/identity/IdentityManager",
+  "esri/request"
+], function(OAuthInfo, esriId, esriRequest) {
+
+  const layerAUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/service_f6d0b40f569c4851b2227f1f41e55aba/FeatureServer/0";
+  const layerBUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/Assessment_Parcels/FeatureServer/0";
+
+  const oauthInfo = new OAuthInfo({
+    appId: "5cZGuKwUnUDFpAJ7",
+    portalUrl: "https://bwsd.maps.arcgis.com",
+    popup: false,
+    redirectUri: window.location.origin + window.location.pathname
+  });
+
+  esriId.registerOAuthInfos([oauthInfo]);
+
+  esriId.checkSignInStatus(oauthInfo.portalUrl + "/sharing")
+    .then(startApp)
+    .catch(function() {
+      esriId.getCredential(oauthInfo.portalUrl + "/sharing")
+        .then(startApp);
+    });
+
+  function startApp() {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("appContainer").style.display = "block";
+  }
+
+  const parcelInput = document.getElementById("parcelInput");
+  const priorsInput = document.getElementById("priorsInput");
+  const priorsContainer = document.getElementById("priorsInputContainer");
+  const otherDescDiv = document.getElementById("otherDesc");
+  const specialNoDiv = document.getElementById("specialNo");
+  const submitBtn = document.getElementById("submitBtn");
+  const parcelInfo = document.getElementById("parcelInfo");
+  const status = document.getElementById("status");
+
+  let parcelDataB = null;
+  let foundParcelA = false;
+
+  parcelInput.addEventListener("blur", lookupParcel);
+
+  function expandRangeString(rangeStr) {
+    let numbers = [];
+    rangeStr.split(',').forEach(part => {
+      part = part.trim();
+      if(part.includes('-')) {
+        let [start, end] = part.split('-').map(Number);
+        for(let i=start;i<=end;i++) numbers.push(i);
+      } else if(part.length) {
+        numbers.push(Number(part));
+      }
+    });
+    return numbers;
+  }
+
+  async function lookupParcel() {
+    const parcel = parcelInput.value.trim();
+    parcelInfo.style.display = "none";
+    priorsContainer.style.display = "none";
+    submitBtn.disabled = true;
+    status.innerHTML = "";
+
+    if(!parcel) return;
+
+    status.innerHTML = "Searching Parcel Layer B...";
+
+    try {
+      // Lookup in Layer B
+      const respB = await esriRequest(layerBUrl + "/query", {
+        method: "post",
+        query: {
+          f:"json",
+          where:`ParcelTaxID='${parcel}'`,
+          outFields:"*",
+          returnGeometry:false
+        }
+      });
+
+      if(respB.data.features.length === 0) {
+        status.innerHTML = "Parcel not found — cannot add.";
+        return;
+      }
+
+      parcelDataB = respB.data.features[0].attributes;
+
+      // Lookup in Layer A
+      const respA = await esriRequest(layerAUrl + "/query", {
+        method: "post",
+        query: {
+          f:"json",
+          where:`TAX_SER_NO='${parcel}'`,
+          outFields:"PRIORS,OTHER_DESC,SPECIAL_NO",
+          returnGeometry:false
+        }
+      });
+
+      foundParcelA = respA.data.features.length > 0;
+
+      if(foundParcelA) {
+        status.innerHTML = "Parcel already exists.";
+        return;
+      }
+
+      // Parcel valid to add
+      parcelInfo.innerHTML =
+        `<strong>Owner:</strong> ${parcelDataB.ParcelOwnerName}<br>
+         <strong>Address:</strong> ${parcelDataB.ParcleOwnerMailAddressLine1 || ''}<br>
+         ${parcelDataB.ParcleOwnerMailAddressLine2 || ''}<br>
+         ${parcelDataB.ParcleOwnerMailAddressLine3 || ''}<br>
+         ${parcelDataB.ParcelOwnerMailCity}, ${parcelDataB.ParcelOwnerMailState} ${parcelDataB.ParcelOwnerMailZipcode}<br>
+         <strong>Acreage:</strong> ${parcelDataB.ParcelAcreage || ''}`;
+
+      parcelInfo.style.display = "block";
+      priorsContainer.style.display = "block";
+      submitBtn.disabled = false;
+      status.innerHTML = "Parcel ready to add. Enter any priors.";
+
+    } catch(err){
+      console.error(err);
+      status.innerHTML = "Error during lookup.";
+    }
+  }
+
+  priorsInput.addEventListener("blur", async function() {
+    const raw = priorsInput.value.trim();
+    if(!raw) return;
+
+    const priorNums = expandRangeString(raw);
+
+    let otherDescList = [];
+    let specialNoList = [];
+
+    for(let prior of priorNums) {
+      try {
+        const resp = await esriRequest(layerAUrl + "/query", {
+          method:"post",
+          query:{
+            f:"json",
+            where:`TAX_SER_NO='${prior}'`,
+            outFields:"OTHER_DESC,SPECIAL_NO",
+            returnGeometry:false
+          }
+        });
+        if(resp.data.features.length) {
+          const attrs = resp.data.features[0].attributes;
+          if(attrs.OTHER_DESC) otherDescList.push(attrs.OTHER_DESC);
+          if(attrs.SPECIAL_NO) specialNoList.push(attrs.SPECIAL_NO);
+        }
+      } catch(err) {
+        console.error(err);
+      }
+    }
+
+    otherDescDiv.innerHTML = "Other_Desc: " + otherDescList.join(", ");
+    specialNoDiv.innerHTML = "Special_No: " + specialNoList.join(", ");
+  });
+
+});
+</script>
+
+</body>
+</html>
