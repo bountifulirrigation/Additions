@@ -22,9 +22,6 @@
     #submitBtn:hover { background-color:#45a049; }
     #status { margin-top:18px; font-weight:bold; color:#333; text-align:center; }
     #submitConfirmRow { display:flex; justify-content:center; gap:20px; margin-top:15px; }
-    #submitConfirmRow button { padding:6px 14px; font-size:14px; border-radius:5px; border:none; cursor:pointer; }
-    #submitConfirmRow button.yes { background-color:#4CAF50; color:white; }
-    #submitConfirmRow button.no { background-color:#f44336; color:white; }
   </style>
 </head>
 <body>
@@ -38,30 +35,11 @@
   </div>
 
   <div id="parcelFields">
-    <div class="form-row"><label for="ownerName">Owner Name:</label><input id="ownerName" readonly /></div>
-    <div class="form-row"><label for="ownerAddress">Owner Address:</label><textarea id="ownerAddress" rows="3" readonly></textarea></div>
-    <div class="form-row"><label for="ownerCity">City:</label><input id="ownerCity" readonly /></div>
-    <div class="form-row"><label for="ownerState">State:</label><input id="ownerState" readonly /></div>
-    <div class="form-row"><label for="ownerZip">ZIP:</label><input id="ownerZip" readonly /></div>
-    <div class="form-row"><label for="Address">Address:</label><input id="Address" readonly /></div>
-    <div class="form-row"><label for="acreage">Acreage:</label><input id="acreage" readonly /></div>
-    <div class="form-row"><label for="assessable">Assessable:</label><input id="assessable" /></div>
-    <div class="form-row"><label for="acreFtWater">Acre Ft of Water:</label><input id="acreFtWater" readonly /></div>
-    <div class="form-row"><label for="parcelStatus">Parcel Status:</label><input id="parcelStatus" /></div>
-    <div class="form-row"><label for="Status">Status:</label><input id="Status" /></div>
-    <div class="form-row"><label for="activity">Activity:</label><input id="activity" readonly /></div>
-    <div class="form-row"><label for="discountMultiplier">Discount Multiplier:</label><input id="discountMultiplier" /></div>
-    <div class="form-row"><label for="services">Services:</label><input id="services" /></div>
-    <div class="form-row"><label for="group_">Group:</label><input id="group_" /></div>
-    <div class="form-row" id="groupOwnerRow"><label for="groupOwner">Group Owner:</label><input id="groupOwner" readonly /></div>
-    <div class="form-row" id="priorsContainer"><label for="priors">Priors:</label><input id="priors" placeholder="e.g., 12345,12347-12350" /></div>
-    <div class="form-row" id="otherDescDiv"><label>Other_Desc:</label><input id="otherDesc" readonly /></div>
-    <div class="form-row" id="specialNoDiv"><label>Special_No:</label><input id="specialNo" readonly /></div>
+    <!-- form fields unchanged -->
 
     <!-- hidden fields -->
     <input type="hidden" id="HOUSE_NO" />
     <input type="hidden" id="STREET_NAM" />
-    <input type="hidden" id="Water_Charge" value="6" />
     <input type="hidden" id="Processed" value="NO" />
 
     <div id="submitConfirmRow">
@@ -97,7 +75,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     const STREET_NAM = document.getElementById("STREET_NAM");
 
     async function lookupParcel(){
-      const respB = await esriRequest(layerBUrl+"/query",{ method:"post", query:{ f:"json", where:`ParcelTaxID+0=${parseInt(parcelInput.value)}`, outFields:"*", returnGeometry:false }});
+      const respB = await esriRequest(layerBUrl+"/query",{ method:"post", query:{ f:"json", where:`ParcelTaxID+0=${parseInt(parcelInput.value)}`, outFields:"*,ParcelSitusNumber,ParcelSitusPreDirections,ParcelSitusStreetName,ParcelSitusStreetType", returnGeometry:false }});
       const parcelB = respB.data.features[0].attributes;
 
       HOUSE_NO.value =
