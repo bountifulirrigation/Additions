@@ -2,8 +2,8 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>Add / Delete Parcels</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Additions</title>
 
   <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
   <script src="https://js.arcgis.com/4.29/"></script>
@@ -12,92 +12,205 @@
     html, body {
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-    }
-
-    #loginScreen {
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
     }
 
     #appContainer {
-      display: none;
-      max-width: 600px;
+      max-width: 700px;
       margin: 50px auto;
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
     }
 
-    input {
-      width: 90%;
-      padding: 12px;
-      font-size: 16px;
-      margin-top: 10px;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
+    h1 {
+      text-align: center;
+      font-size: 32px;
+      color: #222;
+      margin-bottom: 30px;
     }
 
-    button {
-      width: 50%;
-      padding: 12px;
-      margin: 15px auto 0 auto;
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 15px;
+      align-items: center;
+    }
+
+    .form-row label {
+      flex: 1 0 140px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .form-row input, .form-row textarea {
+      flex: 2 0 300px;
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background: #fafafa;
+      color: #222;
+      resize: none;
+    }
+
+    input[readonly], textarea[readonly] {
+      background-color: #f0f0f0;
+      color: #555;
+      border: 1px solid #ccc;
+    }
+
+    textarea {
+      line-height: 1.4;
+    }
+
+    #priorsContainer, #otherDescDiv, #specialNoDiv, #groupOwnerRow, #submitConfirmRow {
+      display: none;
+    }
+
+    #submitBtn {
+      margin-top: 20px;
+      padding: 12px 20px;
       font-size: 16px;
       cursor: pointer;
       display: block;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 6px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+
+    #submitBtn:disabled {
+      background-color: #9ccc9c;
+      cursor: not-allowed;
+    }
+
+    #submitBtn:hover:not(:disabled) {
+      background-color: #45a049;
     }
 
     #status {
-      margin-top: 15px;
+      margin-top: 18px;
       font-weight: bold;
+      color: #333;
       text-align: center;
-    }
-
-    #parcelInfo {
-      margin-top: 15px;
-      background: #f0f0f0;
-      padding: 10px;
-      border-radius: 4px;
-      display: none;
-      text-align: left;
-    }
-
-    #priorsInputContainer, #priorsInput {
-      display: none;
-    }
-
-    #otherDesc, #specialNo {
-      margin-top: 10px;
-      font-weight: bold;
     }
   </style>
 </head>
-
 <body>
 
-<div id="loginScreen">
-  <h2>Loading secure app...</h2>
-</div>
-
 <div id="appContainer">
-  <h2>Add Parcel Record</h2>
+  <h1>Additions</h1>
 
-  <input id="parcelInput" placeholder="Enter Parcel Number" />
-  
-  <div id="parcelInfo"></div>
-
-  <div id="priorsInputContainer">
-    <input id="priorsInput" placeholder="Enter Priors (e.g., 12345,12347-12350)" />
-    <div id="otherDesc">Other_Desc: </div>
-    <div id="specialNo">Special_No: </div>
+  <!-- Parcel Number Input Always Visible -->
+  <div class="form-row">
+    <label for="parcelInput">Parcel Number:</label>
+    <input id="parcelInput" placeholder="Enter Parcel Number" />
   </div>
 
-  <button id="submitBtn" disabled>Submit Parcel</button>
+  <!-- Form fields hidden until parcel is found -->
+  <div id="parcelFields">
+
+    <div class="form-row">
+      <label for="ownerName">Owner Name:</label>
+      <input id="ownerName" readonly />
+    </div>
+
+    <div class="form-row">
+      <label for="ownerAddress">Owner Address:</label>
+      <textarea id="ownerAddress" rows="3" readonly></textarea>
+    </div>
+
+    <div class="form-row">
+      <label for="ownerCity">City:</label>
+      <input id="ownerCity" readonly />
+    </div>
+
+    <div class="form-row">
+      <label for="ownerState">State:</label>
+      <input id="ownerState" readonly />
+    </div>
+
+    <div class="form-row">
+      <label for="ownerZip">ZIP:</label>
+      <input id="ownerZip" readonly />
+    </div>
+
+    <div class="form-row">
+      <label for="acreage">Acreage:</label>
+      <input id="acreage" readonly />
+    </div>
+
+    <div class="form-row">
+      <label for="assessable">Assessable:</label>
+      <input id="assessable" />
+    </div>
+
+    <div class="form-row">
+      <label for="acreFtWater">Acre Ft of Water:</label>
+      <input id="acreFtWater" readonly />
+    </div>
+
+    <div class="form-row">
+      <label for="parcelStatus">Parcel Status:</label>
+      <input id="parcelStatus" />
+    </div>
+
+    <div class="form-row">
+      <label for="activity">Activity:</label>
+      <input id="activity" readonly />
+    </div>
+
+    <div class="form-row">
+      <label for="discountMultiplier">Discount Multiplier:</label>
+      <input id="discountMultiplier" />
+    </div>
+
+    <div class="form-row">
+      <label for="services">Services:</label>
+      <input id="services" />
+    </div>
+
+    <div class="form-row">
+      <label for="group_">Group:</label>
+      <input id="group_" />
+    </div>
+
+    <div class="form-row" id="groupOwnerRow">
+      <label for="groupOwner">Group Owner:</label>
+      <input id="groupOwner" readonly />
+    </div>
+
+    <div class="form-row" id="priorsContainer">
+      <label for="priors">Priors:</label>
+      <input id="priors" placeholder="e.g., 12345,12347-12350" />
+    </div>
+
+    <div class="form-row" id="otherDescDiv">
+      <label>Other_Desc:</label>
+      <input id="otherDesc" readonly />
+    </div>
+
+    <div class="form-row" id="specialNoDiv">
+      <label>Special_No:</label>
+      <input id="specialNo" readonly />
+    </div>
+
+    <!-- Submission confirmation integrated in form -->
+    <div class="form-row" id="submitConfirmRow">
+      <input type="checkbox" id="submitConfirm" />
+      <label for="submitConfirm">Are you sure you want to submit this parcel?</label>
+    </div>
+
+    <button id="submitBtn" disabled>Submit Parcel</button>
+
+  </div>
+
   <div id="status"></div>
 </div>
 
@@ -111,47 +224,60 @@ require([
   const layerAUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/service_f6d0b40f569c4851b2227f1f41e55aba/FeatureServer/0";
   const layerBUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/Assessment_Parcels/FeatureServer/0";
 
- const oauthInfo = new OAuthInfo({
+  // OAuth setup
+  const oauthInfo = new OAuthInfo({
     appId: "LYyDkVlqS7vIWtgK",
     portalUrl: "https://bwsd.maps.arcgis.com",
     popup: false,
-    redirectUri: "https://bountifulirrigation.github.io/Additions/"
-});
+    redirectUri: window.location.href
+  });
 
   esriId.registerOAuthInfos([oauthInfo]);
 
   esriId.checkSignInStatus(oauthInfo.portalUrl + "/sharing")
     .then(startApp)
-    .catch(function() {
-      esriId.getCredential(oauthInfo.portalUrl + "/sharing")
-        .then(startApp);
-    });
+    .catch(() => esriId.getCredential(oauthInfo.portalUrl + "/sharing").then(startApp));
 
   function startApp() {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("appContainer").style.display = "block";
+    document.getElementById("parcelInput").disabled = false;
   }
 
   const parcelInput = document.getElementById("parcelInput");
-  const priorsInput = document.getElementById("priorsInput");
-  const priorsContainer = document.getElementById("priorsInputContainer");
-  const otherDescDiv = document.getElementById("otherDesc");
-  const specialNoDiv = document.getElementById("specialNo");
+  const parcelFields = document.getElementById("parcelFields");
+
+  const ownerName = document.getElementById("ownerName");
+  const ownerAddress = document.getElementById("ownerAddress");
+  const ownerCity = document.getElementById("ownerCity");
+  const ownerState = document.getElementById("ownerState");
+  const ownerZip = document.getElementById("ownerZip");
+  const acreage = document.getElementById("acreage");
+  const assessable = document.getElementById("assessable");
+  const acreFtWater = document.getElementById("acreFtWater");
+  const parcelStatus = document.getElementById("parcelStatus");
+  const activity = document.getElementById("activity");
+  const discountMultiplier = document.getElementById("discountMultiplier");
+  const services = document.getElementById("services");
+  const group_ = document.getElementById("group_");
+  const groupOwnerRow = document.getElementById("groupOwnerRow");
+  const groupOwner = document.getElementById("groupOwner");
+  const priorsContainer = document.getElementById("priorsContainer");
+  const priors = document.getElementById("priors");
+  const otherDescDiv = document.getElementById("otherDescDiv");
+  const otherDesc = document.getElementById("otherDesc");
+  const specialNoDiv = document.getElementById("specialNoDiv");
+  const specialNo = document.getElementById("specialNo");
   const submitBtn = document.getElementById("submitBtn");
-  const parcelInfo = document.getElementById("parcelInfo");
+  const submitConfirm = document.getElementById("submitConfirm");
   const status = document.getElementById("status");
 
-  let parcelDataB = null;
-  let foundParcelA = false;
-
-  parcelInput.addEventListener("blur", lookupParcel);
+  parcelFields.style.display = "none";
 
   function expandRangeString(rangeStr) {
     let numbers = [];
     rangeStr.split(',').forEach(part => {
       part = part.trim();
       if(part.includes('-')) {
-        let [start, end] = part.split('-').map(Number);
+        let [start,end] = part.split('-').map(Number);
         for(let i=start;i<=end;i++) numbers.push(i);
       } else if(part.length) {
         numbers.push(Number(part));
@@ -160,40 +286,51 @@ require([
     return numbers;
   }
 
+  function enableSubmit() {
+    submitBtn.disabled = !submitConfirm.checked;
+  }
+
+  submitConfirm.addEventListener("change", enableSubmit);
+
+  parcelInput.addEventListener("blur", lookupParcel);
+  parcelInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter") lookupParcel();
+  });
+
   async function lookupParcel() {
     const parcel = parcelInput.value.trim();
-    parcelInfo.style.display = "none";
-    priorsContainer.style.display = "none";
-    submitBtn.disabled = true;
     status.innerHTML = "";
+    parcelFields.style.display = "none";
+    submitBtn.disabled = true;
+    submitConfirm.checked = false;
 
     if(!parcel) return;
 
-    status.innerHTML = "Searching Parcel Layer B...";
+    status.innerHTML = "Searching...";
 
     try {
-      // Lookup in Layer B
+      // Layer B lookup
       const respB = await esriRequest(layerBUrl + "/query", {
-        method: "post",
-        query: {
+        method:"post",
+        query:{
           f:"json",
-          where:`ParcelTaxID='${parcel}'`,
-          outFields:"*",
+          where:`ParcelTaxID+0 = ${parseInt(parcel)}`,
+          outFields:"*,ParcelSitusNumber,ParcelSitusPreDirections,ParcelSitusStreetName,ParcelSitusStreetType",
           returnGeometry:false
         }
       });
 
-      if(respB.data.features.length === 0) {
+      if(respB.data.features.length === 0){
         status.innerHTML = "Parcel not found — cannot add.";
         return;
       }
 
-      parcelDataB = respB.data.features[0].attributes;
+      const parcelB = respB.data.features[0].attributes;
 
-      // Lookup in Layer A
+      // Layer A check
       const respA = await esriRequest(layerAUrl + "/query", {
-        method: "post",
-        query: {
+        method:"post",
+        query:{
           f:"json",
           where:`TAX_SER_NO='${parcel}'`,
           outFields:"PRIORS,OTHER_DESC,SPECIAL_NO",
@@ -201,26 +338,35 @@ require([
         }
       });
 
-      foundParcelA = respA.data.features.length > 0;
-
-      if(foundParcelA) {
+      if(respA.data.features.length>0){
         status.innerHTML = "Parcel already exists.";
         return;
       }
 
-      // Parcel valid to add
-      parcelInfo.innerHTML =
-        `<strong>Owner:</strong> ${parcelDataB.ParcelOwnerName}<br>
-         <strong>Address:</strong> ${parcelDataB.ParcleOwnerMailAddressLine1 || ''}<br>
-         ${parcelDataB.ParcleOwnerMailAddressLine2 || ''}<br>
-         ${parcelDataB.ParcleOwnerMailAddressLine3 || ''}<br>
-         ${parcelDataB.ParcelOwnerMailCity}, ${parcelDataB.ParcelOwnerMailState} ${parcelDataB.ParcelOwnerMailZipcode}<br>
-         <strong>Acreage:</strong> ${parcelDataB.ParcelAcreage || ''}`;
+      // Populate Layer A fields
+      ownerName.value = parcelB.ParcelOwnerName || "";
+      ownerAddress.value = [parcelB.ParcelOwnerMailAddressLine1, parcelB.ParcelOwnerMailAddressLine2, parcelB.ParcelOwnerMailAddressLine3].filter(Boolean).join("\n");
+      ownerCity.value = parcelB.ParcelOwnerMailCity || "";
+      ownerState.value = parcelB.ParcelOwnerMailState || "";
+      ownerZip.value = parcelB.ParcelOwnerMailZipcode || "";
+      acreage.value = parcelB.ParcelAcreage || "";
+      assessable.value = parcelB.ParcelAcreage || "";
+      acreFtWater.value = parcelB.ParcelAcreage ? (parcelB.ParcelAcreage*2.9).toFixed(2) : "";
+      parcelStatus.value = "Active";
+      activity.value = "NEW" + new Date().getFullYear().toString().slice(-2);
+      discountMultiplier.value = 1;
+      services.value = 1;
+      group_.value = 100;
+      groupOwner.value = "";
+      groupOwnerRow.style.display = "none";
 
-      parcelInfo.style.display = "block";
-      priorsContainer.style.display = "block";
-      submitBtn.disabled = false;
-      status.innerHTML = "Parcel ready to add. Enter any priors.";
+      // Hidden Layer B concatenated fields
+      window.HOUSE_NO = parcelB.ParcelSitusNumber + parcelB.ParcelSitusPreDirections;
+      window.STREET_NAME = parcelB.ParcelSitusStreetName + " " + parcelB.ParcelSitusStreetType;
+
+      parcelFields.style.display = "block";
+      priorsContainer.style.display = "flex";
+      status.innerHTML = "Parcel found.";
 
     } catch(err){
       console.error(err);
@@ -228,16 +374,29 @@ require([
     }
   }
 
-  priorsInput.addEventListener("blur", async function() {
-    const raw = priorsInput.value.trim();
+  assessable.addEventListener("input", function(){
+    const val = parseFloat(assessable.value);
+    acreFtWater.value = isNaN(val)? "" : (val*2.9).toFixed(2);
+  });
+
+  group_.addEventListener("input", function(){
+    if(parseInt(group_.value) !== 100){
+      groupOwnerRow.style.display = "flex";
+    } else {
+      groupOwnerRow.style.display = "none";
+      groupOwner.value = "";
+    }
+  });
+
+  priors.addEventListener("blur", async function(){
+    const raw = priors.value.trim();
     if(!raw) return;
 
     const priorNums = expandRangeString(raw);
-
     let otherDescList = [];
     let specialNoList = [];
 
-    for(let prior of priorNums) {
+    for(let prior of priorNums){
       try {
         const resp = await esriRequest(layerAUrl + "/query", {
           method:"post",
@@ -248,18 +407,68 @@ require([
             returnGeometry:false
           }
         });
-        if(resp.data.features.length) {
+        if(resp.data.features.length){
           const attrs = resp.data.features[0].attributes;
           if(attrs.OTHER_DESC) otherDescList.push(attrs.OTHER_DESC);
           if(attrs.SPECIAL_NO) specialNoList.push(attrs.SPECIAL_NO);
         }
-      } catch(err) {
-        console.error(err);
-      }
+      } catch(err){ console.error(err); }
     }
 
-    otherDescDiv.innerHTML = "Other_Desc: " + otherDescList.join(", ");
-    specialNoDiv.innerHTML = "Special_No: " + specialNoList.join(", ");
+    otherDesc.value = otherDescList.length? otherDescList.join(", "):"N/A";
+    specialNo.value = specialNoList.length? specialNoList.join(", "):"N/A";
+    otherDescDiv.style.display = "flex";
+    specialNoDiv.style.display = "flex";
+  });
+
+  submitBtn.addEventListener("click", async function(){
+    submitBtn.disabled = true;
+    submitConfirm.checked = false;
+    status.innerHTML = "Submitting...";
+
+    try {
+      const newFeature = {
+        attributes: {
+          TAX_SER_NO: parcelInput.value.trim(),
+          Owner_Name: ownerName.value,
+          Owner_Address: ownerAddress.value,
+          OWNER_CITY: ownerCity.value,
+          OWNER_STAT: ownerState.value,
+          OWNER_ZIP: ownerZip.value,
+          Acreage: parseFloat(acreage.value) || 0,
+          ASSESSABLE: parseFloat(assessable.value) || 0,
+          Acre_ft_Water: parseFloat(acreFtWater.value) || 0,
+          Parcel_Status: parcelStatus.value,
+          ACTIVITY: activity.value,
+          Discount_Multiplier: parseFloat(discountMultiplier.value) || 1,
+          SERVICE_S_: parseFloat(services.value) || 1,
+          GROUP_: parseInt(group_.value) || 100,
+          group_owner: groupOwner.value,
+          PRIORS: priors.value,
+          OTHER_DESC: otherDesc.value,
+          SPECIAL_NO: specialNo.value,
+          HOUSE_NO: window.HOUSE_NO,
+          STREET_NAM: window.STREET_NAME
+        }
+      };
+
+      const resp = await esriRequest(layerAUrl + "/applyEdits", {
+        method: "post",
+        query: { f:"json" },
+        body: { adds: [newFeature] },
+        responseType: "json"
+      });
+
+      console.log(resp);
+      status.innerHTML = "Parcel successfully submitted!";
+      parcelFields.style.display = "none";
+      parcelInput.value = "";
+
+    } catch(err){
+      console.error(err);
+      status.innerHTML = "Error submitting parcel.";
+      submitBtn.disabled = false;
+    }
   });
 
 });
