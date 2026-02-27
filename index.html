@@ -195,7 +195,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     parcelInput.addEventListener("blur", lookupParcel);
     parcelInput.addEventListener("keydown", e=>{ if(e.key==="Enter") lookupParcel(); });
 
-    assessable.addEventListener("input", ()=>{
+    assessable.addEventListener("input", ()=>{ 
       const val=parseFloat(assessable.value);
       acreFtWater.value=isNaN(val)?"":(val*2.9).toFixed(2);
     });
@@ -231,7 +231,6 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
 
     submitBtn.addEventListener("click", ()=>{ submitConfirmRow.style.display="flex"; });
 
-    // === CHANGED BLOCK START (minimal necessary change) ===
     yesBtn.addEventListener("click", async function(){
       const attrs={
         TAX_SER_NO: parcelInput.value,
@@ -266,13 +265,13 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
             f:"json",
             features: JSON.stringify([{ attributes: attrs }])
           },
-         son"
+          authentication: cred,
+          responseType:"json"
         });
         status.innerHTML="Parcel successfully submitted!";
         submitConfirmRow.style.display="none";
       }catch(err){ console.error(err); status.innerHTML="Error submitting parcel."; }
     });
-    // === CHANGED BLOCK END ===
 
     noBtn.addEventListener("click", ()=>{ submitConfirmRow.style.display="none"; });
 
