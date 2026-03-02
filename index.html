@@ -74,7 +74,13 @@
 </div>
 
 <script>
-require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request"], function(OAuthInfo, esriId, esriRequest){
+require([
+  "esri/identity/OAuthInfo",
+  "esri/identity/IdentityManager",
+  "esri/request",
+  "esri/geometry/Polygon",
+  "esri/geometry/geometryEngine"
+], function(OAuthInfo, esriId, esriRequest, Polygon, geometryEngine){
 
   const oauthInfo = new OAuthInfo({
     appId: "LYyDkVlqS7vIWtgK",
@@ -90,7 +96,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
   function startApp(){
     const layerAUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/service_f6d0b40f569c4851b2227f1f41e55aba/FeatureServer/0";
     const layerBUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/Assessment_Parcels/FeatureServer/0";
-
+    let newFeatureGeometry = null; 	
     const parcelInput = document.getElementById("parcelInput");
     const parcelFields = document.getElementById("parcelFields");
 
@@ -154,10 +160,26 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
       try{
         const respB = await esriRequest(layerBUrl+"/query", {
           method:"post",
-          query:{ f:"json", where:`ParcelTaxID+0=${parseInt(parcel)}`, outFields:"*,ParcelFullSitusAddress,ParcelSitusNumber,ParcelSitusPreDirections,ParcelSitusStreetName,ParcelSitusStreetType", returnGeometry:false }
+          query:{ f:"json", where:`ParcelTaxID+0=${parseInt(parcel)}`, outFields:"*,ParcelFullSitusAddress,ParcelSitusNumber,ParcelSitusPreDirections,ParcelSitusStreetName,ParcelSitusStreetType", returnGeometry:true,
+outSR:4326 }
         });
         if(respB.data.features.length===0){ status.innerHTML="Parcel not found."; return; }
         const parcelB = respB.data.features[0].attributes;
+// Build polygon(s) from returned features
+const polygons = respB.data.features.map(f =>
+  new Polygon({
+    rings: f.geometry.rings,
+    spatialReference: { wkid: 4326 }
+  })
+);
+
+// merge multipart parcels if needed
+const mergedPolygon = polygons.length > 1
+  ? geometryEngine.union(polygons)
+  : polygons[0];
+
+// centroid guaranteed inside parcel
+newFeatureGeometry = geometryEngine.centroid(mergedPolygon);
 
         const respA = await esriRequest(layerAUrl+"/query", {
           method:"post",
@@ -271,7 +293,10 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
           method:"post",
           query:{
             f:"json",
-            features: JSON.stringify([{ attributes: attrs }])
+            features: JSON.stringify([{
+  attributes: attrs,
+  geometry: newFeatureGeometry
+}])
           },
           authentication: cred,
           responseType:"json"
