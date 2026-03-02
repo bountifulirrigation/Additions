@@ -160,14 +160,13 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
         });
         if(respB.data.features.length===0){ status.innerHTML="Parcel not found."; return; }
         const parcelB = respB.data.features[0].attributes;
-      // Compute centroid geometry from Layer B polygon and project to WGS84 (lon/lat)
+      // Compute centroid and project to WGS84 (lon/lat)
       try {
-        parcelCentroid = null;
-        parcelCentroidWGS84 = null;
+        parcelCentroid = null; parcelCentroidWGS84 = null;
         if (respB.data.features[0].geometry) {
           const poly = new Polygon(respB.data.features[0].geometry);
           parcelCentroid = geometryEngine.centroid(poly);
-          if (parcelCentroid && parcelCentroid.spatialReference) {
+          if (parcelCentroid) {
             const wgs84 = new SpatialReference({ wkid: 4326 });
             parcelCentroidWGS84 = geometryEngine.project(parcelCentroid, wgs84);
           }
@@ -326,8 +325,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
           submitConfirmRow.style.display = "none";
           status.innerHTML = "";
           parcelInput.focus();
-         parcelCentroid = null;
-         parcelCentroidWGS84 = null;
+         parcelCentroid = null; parcelCentroidWGS84 = null;
         }, 300);
         // === END CHANGE ===
 
