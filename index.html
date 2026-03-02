@@ -77,19 +77,27 @@
 <script>
 require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request"], function(OAuthInfo, esriId, esriRequest){
 
-  
-const oauthInfo = new OAuthInfo({
-  appId: "LYyDkVlqS7vIWtgK",
-  portalUrl: "https://bwsd.maps.arcgis.com",
-  popup: true,
-  redirectUri: "https://bountifulirrigation.github.io/Additions/index.html",
-  popupCallbackUrl: "https://bountifulirrigation.github.io/Additions/oauth-callback.html" // <-- add this
-});
-
+  const oauthInfo = new OAuthInfo({
+    appId: "LYyDkVlqS7vIWtgK",
+    portalUrl: "https://bwsd.maps.arcgis.com",
+    popup: true,
+    redirectUri: "https://bountifulirrigation.github.io/Additions/index.html"
+  });
   esriId.registerOAuthInfos([oauthInfo]);
-  esriId.checkSignInStatus(oauthInfo.portalUrl+"/sharing")
-    .then(startApp)
-    .catch(()=> esriId.getCredential(oauthInfo.portalUrl+"/sharing").then(startApp));
+  // BULLETPROOF AUTH STARTUP
+async function authenticateAndStart() {
+  try {
+    console.log("Starting authentication...");
+    await esriId.getCredential(oauthInfo.portalUrl + "/sharing");
+    console.log("Authentication successful.");
+    startApp();
+  } catch (err) {
+    console.error("Authentication failed:", err);
+  }
+}
+
+// Ensure DOM is fully ready before starting auth
+document.addEventListener("DOMContentLoaded", authenticateAndStart); 
 
   function startApp(){
     const layerAUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/service_f6d0b40f569c4851b2227f1f41e55aba/FeatureServer/0";
