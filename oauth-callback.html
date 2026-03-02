@@ -6,24 +6,17 @@
   <script>
     (function () {
       try {
-        // Hand the OAuth response back to the opener window
-        if (window.opener && !window.opener.closed) {
-          window.opener.postMessage(
-            {
-              type: "arcgis:oauth-response",
-              url: window.location.href
-            },
-            "*"
-          );
-        }
+        var href = window.location.href;
+        // Call into the opener's ArcGIS IdentityManager to complete OAuth
+        window.opener.require(["esri/identity/IdentityManager"], function (IdManager) {
+          // This resolves the getCredential() promise in your main page
+          IdManager.completeOAuth2(href);
+          window.close();
+        });
       } catch (e) {
+        // If something goes wrong, leave a clue in the console
         console.error("OAuth callback error:", e);
       }
-
-      // Close the popup window
-      setTimeout(function () {
-        window.close();
-      }, 0);
     })();
   </script>
 </head>
