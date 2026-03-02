@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-
 <html>
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>OAuth Callback</title>
   <script src="https://js.arcgis.com/4.29/"></script>
   <script>
-    require(["esri/identity/IdentityManager"], function(esriId) {
-      esriId.setOAuthResponseHash(location.hash || location.search);
+    require(["esri/identity/IdentityManager"], function (esriId) {
+      // ArcGIS OAuth may return either a hash or querystring depending on configuration.
+      esriId.setOAuthResponseHash(window.location.hash || window.location.search);
       window.close();
     });
   </script>
 </head>
-<body>
-</body>
+<body></body>
 </html>

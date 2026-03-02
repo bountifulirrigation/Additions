@@ -15,6 +15,8 @@
     .form-row input, .form-row textarea { flex:2 0 300px; padding:8px 12px; font-size:14px; border-radius:5px; border:1px solid #ccc; background:#fafafa; color:#222; resize:none; }
     input[readonly], textarea[readonly] { background-color:#f0f0f0; color:#555; border:1px solid #ccc; }
     textarea { line-height:1.4; }
+    /* Ensure fields stay hidden even if JS/auth fails to initialize */
+    #parcelFields { display:none; }
     #priorsContainer, #otherDescDiv, #specialNoDiv, #groupOwnerRow, #submitConfirmRow { display:none; }
     #submitBtn { margin-top:20px; padding:12px 20px; font-size:16px; cursor:pointer; display:block; margin-left:auto; margin-right:auto; border-radius:6px; border:none; background-color:#4CAF50; color:white; transition: background-color 0.3s ease; }
     #submitBtn:hover { background-color:#45a049; }
@@ -81,12 +83,21 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     appId: "LYyDkVlqS7vIWtgK",
     portalUrl: "https://bwsd.maps.arcgis.com",
     popup: true,
+    popupCallbackUrl: "https://bountifulirrigation.github.io/Additions/oauth-callback.html",
     redirectUri: "https://bountifulirrigation.github.io/Additions/"
   });
   esriId.registerOAuthInfos([oauthInfo]);
   esriId.checkSignInStatus(oauthInfo.portalUrl+"/sharing")
     .then(startApp)
-    .catch(()=> esriId.getCredential(oauthInfo.portalUrl+"/sharing").then(startApp));
+    .catch(() =>
+      esriId.getCredential(oauthInfo.portalUrl+"/sharing")
+        .then(startApp)
+        .catch((err) => {
+          console.error("Auth failed:", err);
+          const statusEl = document.getElementById("status");
+          if (statusEl) statusEl.innerHTML = "Authentication failed. Open the browser console for details.";
+        })
+    );
 
   function startApp(){
     const layerAUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/service_f6d0b40f569c4851b2227f1f41e55aba/FeatureServer/0";
