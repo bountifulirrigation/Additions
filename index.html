@@ -291,12 +291,19 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
       };
       try{
         const cred=await esriId.checkSignInStatus(oauthInfo.portalUrl+"/sharing");
-        await esriRequest(layerAUrl+"/addFeatures",{
-          method:"post",
-          query:{
-            f:"json",
-            features: JSON.stringify([{ attributes: attrs }])
-          },
+       await esriRequest(layerAUrl+"/addFeatures",{
+  method:"post",
+  query:{
+    f:"json",
+    features: JSON.stringify([{
+      geometry: {
+        x: parseFloat(document.getElementById("centroidX").value),
+        y: parseFloat(document.getElementById("centroidY").value),
+        spatialReference: { wkid: 4326 }
+      },
+      attributes: attrs
+    }])
+  },
           authentication: cred,
           responseType:"json"
         });
