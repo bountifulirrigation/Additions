@@ -15,8 +15,10 @@
     .form-row input, .form-row textarea { flex:2 0 300px; padding:8px 12px; font-size:14px; border-radius:5px; border:1px solid #ccc; background:#fafafa; color:#222; resize:none; }
     input[readonly], textarea[readonly] { background-color:#f0f0f0; color:#555; border:1px solid #ccc; }
     textarea { line-height:1.4; }
-    /* Ensure fields stay hidden even if JS/auth fails to initialize */
+
+    /* IMPORTANT: hide fields by default (so they won't appear if init/auth fails) */
     #parcelFields { display:none; }
+
     #priorsContainer, #otherDescDiv, #specialNoDiv, #groupOwnerRow, #submitConfirmRow { display:none; }
     #submitBtn { margin-top:20px; padding:12px 20px; font-size:16px; cursor:pointer; display:block; margin-left:auto; margin-right:auto; border-radius:6px; border:none; background-color:#4CAF50; color:white; transition: background-color 0.3s ease; }
     #submitBtn:hover { background-color:#45a049; }
@@ -25,6 +27,21 @@
     #submitConfirmRow button { padding:6px 14px; font-size:14px; border-radius:5px; border:none; cursor:pointer; }
     #submitConfirmRow button.yes { background-color:#4CAF50; color:white; }
     #submitConfirmRow button.no { background-color:#f44336; color:white; }
+
+    /* Sign-in button */
+    #signInBtn {
+      display:none;
+      margin: 12px auto 0 auto;
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: none;
+      background: #1976d2;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      display: none;
+    }
+    #signInBtn:disabled { opacity: 0.7; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -73,6 +90,7 @@
     <button id="submitBtn">Submit Parcel</button>
   </div>
 
+  <button id="signInBtn">Sign In</button>
   <div id="status"></div>
 </div>
 
@@ -86,18 +104,42 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     popupCallbackUrl: "https://bountifulirrigation.github.io/Additions/oauth-callback.html",
     redirectUri: "https://bountifulirrigation.github.io/Additions/"
   });
+
   esriId.registerOAuthInfos([oauthInfo]);
-  esriId.checkSignInStatus(oauthInfo.portalUrl+"/sharing")
-    .then(startApp)
-    .catch(() =>
-      esriId.getCredential(oauthInfo.portalUrl+"/sharing")
-        .then(startApp)
-        .catch((err) => {
-          console.error("Auth failed:", err);
-          const statusEl = document.getElementById("status");
-          if (statusEl) statusEl.innerHTML = "Authentication failed. Open the browser console for details.";
-        })
-    );
+
+  // Require a user click to open the popup (prevents identity-manager:user-aborted ABORTED loops)
+  const signInBtn = document.getElementById("signInBtn");
+  const status = document.getElementById("status");
+
+  async function initAuth(){
+    try{
+      await esriId.checkSignInStatus(oauthInfo.portalUrl + "/sharing");
+      signInBtn.style.display = "none";
+      status.innerHTML = "";
+      startApp();
+    }catch(e){
+      console.warn("Not signed in yet:", e);
+      status.innerHTML = "Please sign in to continue.";
+      signInBtn.style.display = "inline-block";
+    }
+  }
+
+  signInBtn.addEventListener("click", async () => {
+    signInBtn.disabled = true;
+    status.innerHTML = "Opening sign-in…";
+    try{
+      await esriId.getCredential(oauthInfo.portalUrl + "/sharing");
+      signInBtn.style.display = "none";
+      status.innerHTML = "";
+      startApp();
+    }catch(err){
+      console.error("Auth failed:", err);
+      status.innerHTML = "Authentication failed. Open the browser console for details.";
+      signInBtn.disabled = false;
+    }
+  });
+
+  initAuth();
 
   function startApp(){
     const layerAUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/service_f6d0b40f569c4851b2227f1f41e55aba/FeatureServer/0";
@@ -135,8 +177,8 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     const submitConfirmRow = document.getElementById("submitConfirmRow");
     const yesBtn = submitConfirmRow.querySelector(".yes");
     const noBtn = submitConfirmRow.querySelector(".no");
-    const status = document.getElementById("status");
 
+    // Ensure initial UI state
     parcelFields.style.display="none";
     submitConfirmRow.style.display="none";
 
@@ -164,7 +206,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
       try{
         const respB = await esriRequest(layerBUrl+"/query", {
           method:"post",
-          query:{ 
+          query:{
             f:"json",
             where:`ParcelTaxID+0=${parseInt(parcel)}`,
             outFields:"*,ParcelFullSitusAddress,ParcelSitusNumber,ParcelSitusPreDirections,ParcelSitusStreetName,ParcelSitusStreetType",
@@ -233,7 +275,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     parcelInput.addEventListener("blur", lookupParcel);
     parcelInput.addEventListener("keydown", e=>{ if(e.key==="Enter") lookupParcel(); });
 
-    assessable.addEventListener("input", ()=>{ 
+    assessable.addEventListener("input", ()=>{
       const val=parseFloat(assessable.value);
       acreFtWater.value=isNaN(val)?"":(val*2.9).toFixed(2);
     });
@@ -299,19 +341,19 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
       };
       try{
         const cred=await esriId.checkSignInStatus(oauthInfo.portalUrl+"/sharing");
-       await esriRequest(layerAUrl+"/addFeatures",{
-  method:"post",
-  query:{
-    f:"json",
-    features: JSON.stringify([{
-      geometry: {
-        x: parseFloat(document.getElementById("centroidX").value),
-        y: parseFloat(document.getElementById("centroidY").value),
-        spatialReference: { wkid: 4326 }
-      },
-      attributes: attrs
-    }])
-  },
+        await esriRequest(layerAUrl+"/addFeatures",{
+          method:"post",
+          query:{
+            f:"json",
+            features: JSON.stringify([{
+              geometry: {
+                x: parseFloat(document.getElementById("centroidX").value),
+                y: parseFloat(document.getElementById("centroidY").value),
+                spatialReference: { wkid: 4326 }
+              },
+              attributes: attrs
+            }])
+          },
           authentication: cred,
           responseType:"json"
         });

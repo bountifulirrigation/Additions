@@ -5,8 +5,8 @@
   <title>OAuth Callback</title>
   <script src="https://js.arcgis.com/4.29/"></script>
   <script>
-    require(["esri/identity/IdentityManager"], function (IdentityManager) {
-      // Pass the OAuth response to the opener (your app) so it can finish sign-in
+    require(["esri/identity/IdentityManager"], function () {
+      // Pass the OAuth response back to the opener window's IdentityManager
       if (window.opener && !window.opener.closed) {
         window.opener.require(["esri/identity/IdentityManager"], function (OpenerId) {
           OpenerId.setOAuthResponseHash(window.location.hash || window.location.search);
