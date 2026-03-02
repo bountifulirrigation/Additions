@@ -2,14 +2,20 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>OAuth Callback</title>
   <script src="https://js.arcgis.com/4.29/"></script>
   <script>
-    require(["esri/identity/IdentityManager"], function (esriId) {
-      // ArcGIS OAuth may return either a hash or querystring depending on configuration.
-      esriId.setOAuthResponseHash(window.location.hash || window.location.search);
-      window.close();
+    require(["esri/kernel"], function (kernel) {
+      // Pass the OAuth response back to the app window
+      if (window.opener && !window.opener.closed) {
+        window.opener.require(["esri/kernel"], function (openerKernel) {
+          openerKernel.id.setOAuthResponseHash(window.location.hash || window.location.search);
+          window.close();
+        });
+      } else {
+        // If opener is missing, show something useful for debugging
+        document.body.innerText = "No opener window found. Authentication cannot be completed.";
+      }
     });
   </script>
 </head>
