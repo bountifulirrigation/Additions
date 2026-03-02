@@ -340,7 +340,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
         y: document.getElementById("centroidY").value
       };
       try{
-        const cred=await esriId.checkSignInStatus(oauthInfo.portalUrl+"/sharing");
+        const cred = await esriId.getCredential(layerAUrl);
         await esriRequest(layerAUrl+"/addFeatures",{
           method:"post",
           query:{
