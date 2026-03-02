@@ -5,16 +5,15 @@
   <title>OAuth Callback</title>
   <script src="https://js.arcgis.com/4.29/"></script>
   <script>
-    require(["esri/kernel"], function (kernel) {
-      // Pass the OAuth response back to the app window
+    require(["esri/identity/IdentityManager"], function (IdentityManager) {
+      // Pass the OAuth response to the opener (your app) so it can finish sign-in
       if (window.opener && !window.opener.closed) {
-        window.opener.require(["esri/kernel"], function (openerKernel) {
-          openerKernel.id.setOAuthResponseHash(window.location.hash || window.location.search);
+        window.opener.require(["esri/identity/IdentityManager"], function (OpenerId) {
+          OpenerId.setOAuthResponseHash(window.location.hash || window.location.search);
           window.close();
         });
       } else {
-        // If opener is missing, show something useful for debugging
-        document.body.innerText = "No opener window found. Authentication cannot be completed.";
+        document.body.innerText = "No opener window found. Can't complete sign-in.";
       }
     });
   </script>
