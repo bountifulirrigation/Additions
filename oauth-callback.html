@@ -8,20 +8,18 @@
       var href = window.location.href;
 
       function closeSoon() {
-        // give the opener a moment to settle
-        setTimeout(function(){ window.close(); }, 0);
+        // Give the opener a tick to settle after completing OAuth
+        setTimeout(function(){ window.close(); }, 250);
       }
 
-      // ---- Path A: Use opener's ArcGIS loader (preferred) ----
+      // ---- Path A: Use the opener's ArcGIS loader (preferred) ----
       try {
         if (window.opener && !window.opener.closed && window.opener.require) {
           window.opener.require(["esri/identity/IdentityManager"], function (IdManager) {
-            try {
-              IdManager.completeOAuth2(href);
-            } catch(e) { console.error("completeOAuth2 via opener failed:", e); }
+            try { IdManager.completeOAuth2(href); } catch(e) { console.error("completeOAuth2 via opener failed:", e); }
             closeSoon();
           });
-          return; // done
+          return; // Done via opener
         }
       } catch (e) {
         console.warn("Opener path not available:", e);
@@ -31,9 +29,7 @@
       function loadArcGisAndComplete() {
         try {
           require(["esri/identity/IdentityManager"], function (IdManager) {
-            try {
-              IdManager.completeOAuth2(href);
-            } catch(e) { console.error("completeOAuth2 in popup failed:", e); }
+            try { IdManager.completeOAuth2(href); } catch(e) { console.error("completeOAuth2 in popup failed:", e); }
             closeSoon();
           });
         } catch (e) {
@@ -47,27 +43,24 @@
         var s = document.createElement("script");
         s.src = "https://js.arcgis.com/4.29/";
         s.onload = loadArcGisAndComplete;
-        s.onerror = function(){ 
+        s.onerror = function(){
           console.error("Failed to load ArcGIS API in callback popup.");
           postBackAndClose();
         };
         document.head.appendChild(s);
       }
 
-      // ---- Path C: Post the URL back to opener as a fallback ----
+      // ---- Path C: Post the URL back to opener as a last resort ----
       function postBackAndClose() {
         try {
           if (window.opener && !window.opener.closed) {
-            window.opener.postMessage(
-              { type: "arcgis:oauth-response", url: href },
-              "*"
-            );
+            window.opener.postMessage({ type: "arcgis:oauth-response", url: href }, "*");
           }
         } catch (_e) {}
         closeSoon();
       }
 
-      // If we got here, opener path wasn't usable; try loading the API inside the popup.
+      // If opener path isn't usable, try loading the API in the popup.
       injectArcGisScriptAndRun();
     })();
   </script>

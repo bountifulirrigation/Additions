@@ -77,12 +77,15 @@
 <script>
 require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request"], function(OAuthInfo, esriId, esriRequest){
 
-  const oauthInfo = new OAuthInfo({
-    appId: "LYyDkVlqS7vIWtgK",
-    portalUrl: "https://bwsd.maps.arcgis.com",
-    popup: true,
-    redirectUri: "https://bountifulirrigation.github.io/Additions/index.html"
-  });
+  
+const oauthInfo = new OAuthInfo({
+  appId: "LYyDkVlqS7vIWtgK",
+  portalUrl: "https://bwsd.maps.arcgis.com",
+  popup: true,
+  redirectUri: "https://bountifulirrigation.github.io/Additions/index.html",
+  popupCallbackUrl: "https://bountifulirrigation.github.io/Additions/oauth-callback.html" // <-- add this
+});
+
   esriId.registerOAuthInfos([oauthInfo]);
   esriId.checkSignInStatus(oauthInfo.portalUrl+"/sharing")
     .then(startApp)
