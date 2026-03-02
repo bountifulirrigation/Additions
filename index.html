@@ -83,9 +83,11 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     popup: true,
     });
   esriId.registerOAuthInfos([oauthInfo]);
-  esriId.checkSignInStatus(oauthInfo.portalUrl+"/sharing")
-    .then(startApp)
-    .catch(()=> esriId.getCredential(oauthInfo.portalUrl+"/sharing").then(startApp));
+  esriId.getCredential(oauthInfo.portalUrl + "/sharing")
+  .then(startApp)
+  .catch(err => {
+    console.error("OAuth failed", err);
+  });	
 
   function startApp(){
     const layerAUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/service_f6d0b40f569c4851b2227f1f41e55aba/FeatureServer/0";
