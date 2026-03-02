@@ -60,7 +60,6 @@
     <input type="hidden" id="HOUSE_NO" />
     <input type="hidden" id="STREET_NAM" />
     <input type="hidden" id="Water_Charge" value="6" />
-    <input type="hidden" id="Processed" value="NO" />
     <input type="hidden" id="centroidX" />
     <input type="hidden" id="centroidY" />
 
@@ -121,7 +120,6 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
     const specialNo = document.getElementById("specialNo");
     const HOUSE_NO = document.getElementById("HOUSE_NO");
     const STREET_NAM = document.getElementById("STREET_NAM");
-    const Processed = document.getElementById("Processed");
     const submitBtn = document.getElementById("submitBtn");
     const submitConfirmRow = document.getElementById("submitConfirmRow");
     const yesBtn = submitConfirmRow.querySelector(".yes");
@@ -285,7 +283,6 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
         HOUSE_NO: HOUSE_NO.value,
         STREET_NAM: STREET_NAM.value,
         Water_Charge: 6,
-        Processed: Processed.value,
         x: document.getElementById("centroidX").value,
         y: document.getElementById("centroidY").value
       };
@@ -342,7 +339,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
           submitConfirmRow.style.display = "none";
           status.innerHTML = "";
           parcelInput.focus();
-        }, 300);
+        }, 1000);
 
       }catch(err){ console.error(err); status.innerHTML="Error submitting parcel."; }
     });
