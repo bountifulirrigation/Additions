@@ -74,13 +74,7 @@
 </div>
 
 <script>
-require([
-  "esri/identity/OAuthInfo",
-  "esri/identity/IdentityManager",
-  "esri/request",
-  "esri/geometry/Polygon",
-  "esri/geometry/geometryEngine"
-], function(OAuthInfo, esriId, esriRequest, Polygon, geometryEngine){
+require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request","esri/geometry/Polygon","esri/geometry/geometryEngine"], function(OAuthInfo, esriId, esriRequest, Polygon, geometryEngine){
 
   const oauthInfo = new OAuthInfo({
     appId: "LYyDkVlqS7vIWtgK",
@@ -94,9 +88,10 @@ require([
     .catch(()=> esriId.getCredential(oauthInfo.portalUrl+"/sharing").then(startApp));
 
   function startApp(){
+  let parcelCentroid = null;
     const layerAUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/service_f6d0b40f569c4851b2227f1f41e55aba/FeatureServer/0";
     const layerBUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/Assessment_Parcels/FeatureServer/0";
-    let newFeatureGeometry = null; 	
+
     const parcelInput = document.getElementById("parcelInput");
     const parcelFields = document.getElementById("parcelFields");
 
@@ -160,26 +155,19 @@ require([
       try{
         const respB = await esriRequest(layerBUrl+"/query", {
           method:"post",
-          query:{ f:"json", where:`ParcelTaxID+0=${parseInt(parcel)}`, outFields:"*,ParcelFullSitusAddress,ParcelSitusNumber,ParcelSitusPreDirections,ParcelSitusStreetName,ParcelSitusStreetType", returnGeometry:true,
-outSR:4326 }
+          query:{ f:"json", where:`ParcelTaxID+0=${parseInt(parcel)}`, outFields:"*,ParcelFullSitusAddress,ParcelSitusNumber,ParcelSitusPreDirections,ParcelSitusStreetName,ParcelSitusStreetType", returnGeometry:false }
         });
         if(respB.data.features.length===0){ status.innerHTML="Parcel not found."; return; }
         const parcelB = respB.data.features[0].attributes;
-// Build polygon(s) from returned features
-const polygons = respB.data.features.map(f =>
-  new Polygon({
-    rings: f.geometry.rings,
-    spatialReference: { wkid: 4326 }
-  })
-);
+       // compute centroid geometry from Layer B polygon
+       let parcelCentroid = null;
+       try {
+         if (respB.data.features[0].geometry) {
+           const poly = new Polygon(respB.data.features[0].geometry);
+           parcelCentroid = geometryEngine.centroid(poly);
+         }
+       } catch (e) { console.error("centroid calc error", e); }
 
-// merge multipart parcels if needed
-const mergedPolygon = polygons.length > 1
-  ? geometryEngine.union(polygons)
-  : polygons[0];
-
-// centroid guaranteed inside parcel
-newFeatureGeometry = geometryEngine.centroid(mergedPolygon);
 
         const respA = await esriRequest(layerAUrl+"/query", {
           method:"post",
@@ -293,10 +281,7 @@ newFeatureGeometry = geometryEngine.centroid(mergedPolygon);
           method:"post",
           query:{
             f:"json",
-            features: JSON.stringify([{
-  attributes: attrs,
-  geometry: newFeatureGeometry
-}])
+            features: JSON.stringify([{ attributes: attrs }])
           },
           authentication: cred,
           responseType:"json"
@@ -335,6 +320,7 @@ newFeatureGeometry = geometryEngine.centroid(mergedPolygon);
           submitConfirmRow.style.display = "none";
           status.innerHTML = "";
           parcelInput.focus();
+         parcelCentroid = null;
         }, 300);
         // === END CHANGE ===
 
