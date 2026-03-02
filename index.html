@@ -74,7 +74,7 @@
 </div>
 
 <script>
-require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request","esri/geometry/Polygon","esri/geometry/geometryEngine"], function(OAuthInfo, esriId, esriRequest, Polygon, geometryEngine){
+require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request","esri/geometry/Polygon","esri/geometry/geometryEngine","esri/geometry/SpatialReference"], function(OAuthInfo, esriId, esriRequest, Polygon, geometryEngine, SpatialReference){
 
   const oauthInfo = new OAuthInfo({
     appId: "LYyDkVlqS7vIWtgK",
@@ -89,6 +89,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
 
   function startApp(){
   let parcelCentroid = null;
+  let parcelCentroidWGS84 = null;
     const layerAUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/service_f6d0b40f569c4851b2227f1f41e55aba/FeatureServer/0";
     const layerBUrl = "https://services3.arcgis.com/qACnxJSsTspwubRv/arcgis/rest/services/Assessment_Parcels/FeatureServer/0";
 
@@ -155,23 +156,28 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
       try{
         const respB = await esriRequest(layerBUrl+"/query", {
           method:"post",
-          query:{ f:"json", where:`ParcelTaxID+0=${parseInt(parcel)}`, outFields:"*,ParcelFullSitusAddress,ParcelSitusNumber,ParcelSitusPreDirections,ParcelSitusStreetName,ParcelSitusStreetType", returnGeometry:false }
+          query:{ f:"json", where:`ParcelTaxID+0=${parseInt(parcel)}`, outFields:"*,ParcelFullSitusAddress,ParcelSitusNumber,ParcelSitusPreDirections,ParcelSitusStreetName,ParcelSitusStreetType", returnGeometry:true }
         });
         if(respB.data.features.length===0){ status.innerHTML="Parcel not found."; return; }
         const parcelB = respB.data.features[0].attributes;
-       // compute centroid geometry from Layer B polygon
-       let parcelCentroid = null;
-       try {
-         if (respB.data.features[0].geometry) {
-           const poly = new Polygon(respB.data.features[0].geometry);
-           parcelCentroid = geometryEngine.centroid(poly);
-         }
-       } catch (e) { console.error("centroid calc error", e); }
+      // Compute centroid geometry from Layer B polygon and project to WGS84 (lon/lat)
+      try {
+        parcelCentroid = null;
+        parcelCentroidWGS84 = null;
+        if (respB.data.features[0].geometry) {
+          const poly = new Polygon(respB.data.features[0].geometry);
+          parcelCentroid = geometryEngine.centroid(poly);
+          if (parcelCentroid && parcelCentroid.spatialReference) {
+            const wgs84 = new SpatialReference({ wkid: 4326 });
+            parcelCentroidWGS84 = geometryEngine.project(parcelCentroid, wgs84);
+          }
+        }
+      } catch (e) { console.error("centroid/projection error", e); }
 
 
         const respA = await esriRequest(layerAUrl+"/query", {
           method:"post",
-          query:{ f:"json", where:`TAX_SER_NO='${parcel}'`, outFields:"PRIORS,OTHER_DESC,SPECIAL_NO", returnGeometry:false }
+          query:{ f:"json", where:`TAX_SER_NO='${parcel}'`, outFields:"PRIORS,OTHER_DESC,SPECIAL_NO", returnGeometry:true }
         });
         if(respA.data.features.length>0){ status.innerHTML="Parcel already exists."; return; }
 
@@ -226,7 +232,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
         try{
           const resp = await esriRequest(layerAUrl+"/query",{
             method:"post",
-            query:{ f:"json", where:`TAX_SER_NO='${prior}'`, outFields:"OTHER_DESC,SPECIAL_NO", returnGeometry:false }
+            query:{ f:"json", where:`TAX_SER_NO='${prior}'`, outFields:"OTHER_DESC,SPECIAL_NO", returnGeometry:true }
           });
           if(resp.data.features.length){
             const attrs=resp.data.features[0].attributes;
@@ -281,7 +287,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
           method:"post",
           query:{
             f:"json",
-            features: JSON.stringify([{ attributes: attrs }])
+            features: JSON.stringify([(parcelCentroid ? { attributes: attrs, geometry: parcelCentroid.toJSON() } : { attributes: attrs })])
           },
           authentication: cred,
           responseType:"json"
@@ -321,6 +327,7 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
           status.innerHTML = "";
           parcelInput.focus();
          parcelCentroid = null;
+         parcelCentroidWGS84 = null;
         }, 300);
         // === END CHANGE ===
 
