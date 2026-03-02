@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>OAuth Callback</title>
+  <script>
+    (function () {
+      try {
+        // Hand the OAuth response back to the opener window
+        if (window.opener && !window.opener.closed) {
+          window.opener.postMessage(
+            {
+              type: "arcgis:oauth-response",
+              url: window.location.href
+            },
+            "*"
+          );
+        }
+      } catch (e) {
+        console.error("OAuth callback error:", e);
+      }
+
+      // Close the popup window
+      setTimeout(function () {
+        window.close();
+      }, 0);
+    })();
+  </script>
+</head>
+<body></body>
+</html>
