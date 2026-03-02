@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>OAuth Callback</title>
+  <script src="https://js.arcgis.com/4.29/"></script>
+  <script>
+    require(["esri/identity/IdentityManager"], function(esriId) {
+      esriId.setOAuthResponseHash(location.hash || location.search);
+      window.close();
+    });
+  </script>
+</head>
+<body>
+</body>
+</html>
