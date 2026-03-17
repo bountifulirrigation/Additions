@@ -304,10 +304,53 @@ require(["esri/identity/OAuthInfo","esri/identity/IdentityManager","esri/request
       specialNoDiv.style.display="flex";
     });
 
-    group_.addEventListener("input", function(){
-      if(parseInt(group_.value)!==100){ groupOwnerRow.style.display="flex"; }
-      else{ groupOwnerRow.style.display="none"; groupOwner.value=""; }
-    });
+ group_.addEventListener("input", function(){
+
+  const groupMap = {
+    1: "WEBER BASIN WATER CONSERVANCY DISTRICT",
+    2: "WOODS CROSS CITY",
+    3: "WEST BOUNTIFUL CITY",
+    4: "REDEVELOPMENT AGENCY OF BOUNTIFUL CITY",
+    5: "DAVIS COUNTY HOUSING AUTHORITY",
+    6: "BOARD OF EDUCATION OF DAVIS SCHOOL DISTRICT",
+    7: "THE CHURCH OF JESUS CHRIST OF LATTER DAY SAINTS",
+    8: "BOUNTIFUL CITY CORPORATION",
+    9: "SCIOTO PROPERTIES SP-16 LLC",
+    10: "CATHOLIC DIOCESE OF SLC REAL ESTATE CORP.",
+    11: "BOUNTIFUL COMMUNITY CHURCH",
+    12: "GRACE LUTHERAN CHURCH OF CENTERVILLE UTAH",
+    14: "BOUNTIFUL MASONIC TEMPLE ASSOCIATION",
+    15: "BOUNTIFUL CONGREGATION OF JEHOVAHS WITNESSES",
+    16: "UNITES STATES POSTAL SERVICE",
+    18: "DAVIS COUNTY",
+    19: "REDEEMING LIFE CHURCH",
+    20: "SOUTH DAVIS METRO FIRE",
+    21: "FLOURISHING GRACE CHURCH",
+    23: "CROSS OF CHRIST LUTHERAN CHURCH INC OF BOUNTIFUL",
+    24: "FIRST BAPTIST CHURCH OF BOUNTIFUL",
+    25: "UTAH STATE BUILDING OWNERSHIP AUTHORITY",
+    26: "CORPORATION OF THE EPISCOPAL CHURCH IN UTAH",
+    27: "ENBRIDGE GAS",
+    29: "5TH SOUTH DENTAL PLAZA",
+    33: "FUTURES THROUGH CHOICES INC",
+    34: "SOUTH DAVIS REVOVERTY CLUB INC",
+    35: "DAVIS NORTH/SOUTH RESIDENTIAL INC",
+    37: "SHEFFIELD DOWNS HOA",
+    38: "ASSOC. OF LAKEWOODS CONDOS",
+    40: "LIVING CHURCH MINISTRIES",
+    41: "UTAH DEPARTMENT OF TRANSPORTATION (REGION 1)"
+  };
+
+  const groupValue = parseInt(group_.value);
+
+  if (groupValue !== 100) {
+    groupOwnerRow.style.display = "flex";
+    groupOwner.value = groupMap[groupValue] || "";
+  } else {
+    groupOwnerRow.style.display = "none";
+    groupOwner.value = "";
+  }
+});
 
     submitBtn.addEventListener("click", ()=>{ submitConfirmRow.style.display="flex"; });
 
